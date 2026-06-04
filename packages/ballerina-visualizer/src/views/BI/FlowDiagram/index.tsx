@@ -2120,7 +2120,7 @@ export function BIFlowDiagram(props: BIFlowDiagramProps) {
         return messageTimeout;
     };
 
-    const cleanupProgressMessage = (messageTimeout: number) => {
+    const cleanupProgressMessage = (messageTimeout: ReturnType<typeof setTimeout>) => {
         clearTimeout(messageTimeout);
         setProgressMessage(LOADING_MESSAGE);
     };
