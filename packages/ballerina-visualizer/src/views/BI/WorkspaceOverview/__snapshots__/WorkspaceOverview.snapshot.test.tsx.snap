@@ -1,0 +1,1166 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WorkspaceOverview snapshots renders empty project correctly: empty-project 1`] = `
+"/* Emotion Styles */
+.css-20 {display: flex; gap: 8px; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-22 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 12px; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; padding: 32px 24px 48px 24px; text-align: center;}
+.css-0 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; height: 100vh; overflow: hidden;}
+.css-10 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 16px;}
+.css-9 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 24px; min-height: 0;}
+.css-15 {font-weight: normal; font-size: 16px; letter-spacing: 0.15px; margin: unset;}
+.css-24 {font-weight: normal; font-size: 14px; letter-spacing: 0.149px; margin: unset;}
+.css-2 {display: flex; -webkit-align-items: flex-end; -webkit-box-align: flex-end; -ms-flex-align: flex-end; align-items: flex-end; gap: 8px; position: relative;}
+.css-17 {display: flex; height: fit-content; width: fit-content;}
+.css-19 {height: 16px; width: 14px; cursor: pointer; margin-right: 4px;}
+.css-23 {color: var(--vscode-descriptionForeground);}
+.css-4 {font-weight: bold; font-size: 1.5rem; margin-bottom: 0; margin-top: 0; -webkit-transition: opacity 0.40s ease; transition: opacity 0.40s ease;}
+.css-14 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; padding: 32px 24px 64px 24px; text-align: center; min-height: 300px;}
+.css-16 {display: flex; -webkit-align-items: flex-end; -webkit-box-align: flex-end; -ms-flex-align: flex-end; align-items: flex-end; gap: 8px;}
+.css-18 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px;}
+.css-21 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px; font-size: 16px;}
+.css-7 {display: none; font-weight: 200; font-size: 1.5rem; opacity: 0.3; margin-bottom: 0; margin-top: 0;}
+.css-12 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 20px 0 20px; margin-bottom: 16px;}
+.css-1 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 24px; background: var(--vscode-editor-background); border-bottom: 1px solid var(--vscode-dropdown-border); -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; margin: 16px 16px 0 16px;}
+.css-5 {opacity: 0; max-width: 0; overflow: hidden; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; -webkit-transition: opacity 0.2s,max-width 0.2s; transition: opacity 0.2s,max-width 0.2s; display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-6 {height: 16px; width: 16px; cursor: pointer; color: var(--vscode-descriptionForeground); font-size: 14px;}
+.css-3 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 6px; cursor: pointer; outline: none;}
+.css-3:is(:hover, :focus-visible) .edit-title-icon-wrapper {opacity: 1; max-width: 28px;}
+.css-13 {font-size: 1.125rem; font-weight: 600; margin: 0; color: var(--vscode-foreground);}
+.css-11 {background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; overflow: hidden;}
+.css-8 {-webkit-flex: 1; -ms-flex: 1; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px; display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 24px;}
+@media (min-width: 640px) {.css-7 {display: block;}}
+@media (min-width: 768px) {.css-4 {font-size: 1.875rem;}}
+@media (min-width: 768px) {.css-7 {font-size: 1.875rem;}}
+
+/* DOM */
+<div>
+  <div
+    class="css-0"
+  >
+    <div
+      class="css-1"
+    >
+      <div
+        class="css-2"
+      >
+        <div
+          style="position: relative;"
+        >
+          <div
+            class="css-3"
+            role="button"
+            tabindex="0"
+            title="Click to edit name"
+          >
+            <h1
+              class="css-4"
+              style="opacity: 1;"
+            >
+              My Project
+            </h1>
+            <div
+              class="edit-title-icon-wrapper css-5"
+            >
+              <div
+                class="css-6"
+              >
+                <i
+                  class="codicon codicon-edit"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <h2
+          class="css-7"
+        >
+          Project
+        </h2>
+      </div>
+    </div>
+    <div
+      class="css-8"
+    >
+      <div
+        class="css-9"
+      >
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-11"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                Integrations & Libraries
+              </h2>
+            </div>
+            <div
+              class="css-14"
+            >
+              <h3
+                style="margin-bottom: 16px;"
+              >
+                Your project is empty
+              </h3>
+              <p
+                class="css-15"
+                style="margin-bottom: 24px;"
+              >
+                Start by adding integrations and libraries to your project
+              </p>
+              <div
+                class="css-16"
+              >
+                <div
+                  class="css-17"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-18"
+                    >
+                      <i
+                        class="codicon codicon-add"
+                      />
+                    </div>
+                     Add Integration or Library
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+                <div
+                  class="css-17"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-19"
+                    >
+                      <i
+                        class="fw-bi-ai-chat"
+                        style="position: relative; top: 2px;"
+                      />
+                    </div>
+                     Generate with AI
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-11"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                README
+              </h2>
+              <div
+                class="css-20"
+              >
+                <div
+                  class="css-17"
+                >
+                  <vscode-button
+                    style="padding: 4px 8px;"
+                  >
+                    <div
+                      class="css-21"
+                    >
+                      <i
+                        class="fw-bi-edit"
+                      />
+                    </div>
+                     Edit
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="css-22"
+            >
+              <p
+                class="css-23 css-24"
+              >
+                Document your project, integrations, and libraries
+              </p>
+              <vscode-link>
+                Add a README
+              </vscode-link>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>"
+`;
+
+exports[`WorkspaceOverview snapshots renders project with integration and library correctly: integration-and-library 1`] = `
+"/* Emotion Styles */
+.css-22 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 12px; -webkit-flex: 1; -ms-flex: 1; flex: 1; min-width: 0; line-height: 1;}
+.css-19 {display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; width: 100%;}
+.css-14 {display: flex; gap: 8px; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-44 {font-weight: normal; font-size: 13px; margin: unset;}
+.css-34 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 12px; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; padding: 32px 24px 48px 24px; text-align: center;}
+.css-43 {border-top: 1px solid var(--vscode-editorIndentGuide-background); margin: 16px 0;}
+.css-0 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; height: 100vh; overflow: hidden;}
+.css-21 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; gap: 12px;}
+.css-42 {max-height: 0; overflow: hidden; -webkit-transition: max-height 0.3s ease-in-out; transition: max-height 0.3s ease-in-out; margin-top: 0;}
+.css-23 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0;}
+.css-39 {cursor: pointer; border: none; background: transparent; border-radius: 6px; display: flex; overflow: hidden; width: 100%; padding: 10px; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; margin-bottom: 8px;}
+.css-39:hover {background: var(--vscode-welcomePage-tileHoverBackground);}
+.css-10 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 16px;}
+.css-9 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 24px; min-height: 0;}
+.css-8 {-webkit-flex: 1; -ms-flex: 1; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px; display: grid; grid-template-columns: 3fr 1fr; gap: 24px;}
+.css-45 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 6px;}
+.css-36 {font-weight: normal; font-size: 14px; letter-spacing: 0.149px; margin: unset;}
+.css-25 {font-weight: 500; font-size: 15px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-flex: 1; -ms-flex: 1; flex: 1; display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-2 {display: flex; -webkit-align-items: flex-end; -webkit-box-align: flex-end; -ms-flex-align: flex-end; align-items: flex-end; gap: 8px; position: relative;}
+.css-37 {padding: 0px 10px 10px 10px;}
+.css-15 {display: flex; height: fit-content; width: fit-content;}
+.css-16 {height: 16px; width: 14px; cursor: pointer; margin-right: 4px;}
+.css-30 {display: flex; -webkit-box-flex-wrap: wrap; -webkit-flex-wrap: wrap; -ms-flex-wrap: wrap; flex-wrap: wrap; gap: 6px; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; min-height: 28px;}
+.css-35 {color: var(--vscode-descriptionForeground);}
+.css-4 {font-weight: bold; font-size: 1.5rem; margin-bottom: 0; margin-top: 0; -webkit-transition: opacity 0.40s ease; transition: opacity 0.40s ease;}
+.css-24 {height: 25px; width: 25px; cursor: pointer;}
+.css-18 {padding: 0 20px 20px 20px;}
+.css-41 {height: 16px; width: 14px; cursor: pointer; color: inherit;}
+.css-17 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px;}
+.css-33 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px; font-size: 16px;}
+.css-7 {display: none; font-weight: 200; font-size: 1.5rem; opacity: 0.3; margin-bottom: 0; margin-top: 0;}
+.css-29 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; gap: 10px;}
+.css-20 {position: relative; display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 12px; padding: 16px 20px; background: var(--vscode-sideBar-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; cursor: pointer; -webkit-transition: all 0.2s ease; transition: all 0.2s ease;}
+.css-20:active {-webkit-transform: translateY(0); -moz-transform: translateY(0); -ms-transform: translateY(0); transform: translateY(0);}
+.css-20:hover .delete-button {opacity: 1;}
+.css-20:hover {background: var(--vscode-list-hoverBackground); border-color: var(--vscode-focusBorder); -webkit-transform: translateY(-2px); -moz-transform: translateY(-2px); -ms-transform: translateY(-2px); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
+.css-12 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 20px 0 20px; margin-bottom: 16px;}
+.css-1 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 24px; background: var(--vscode-editor-background); border-bottom: 1px solid var(--vscode-dropdown-border); -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; margin: 16px 16px 0 16px;}
+.css-31 {display: inline-flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; background: color-mix(in srgb, var(--vscode-charts-foreground) 12%, transparent); color: var(--vscode-charts-foreground); border: 1px solid color-mix(in srgb, var(--vscode-charts-foreground) 25%, transparent); text-transform: capitalize; white-space: nowrap;}
+.css-5 {opacity: 0; max-width: 0; overflow: hidden; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; -webkit-transition: opacity 0.2s,max-width 0.2s; transition: opacity 0.2s,max-width 0.2s; display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-28 {height: 16px; width: 14px; cursor: pointer;}
+.css-6 {height: 16px; width: 16px; cursor: pointer; color: var(--vscode-descriptionForeground); font-size: 14px;}
+.css-3 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 6px; cursor: pointer; outline: none;}
+.css-3:is(:hover, :focus-visible) .edit-title-icon-wrapper {opacity: 1; max-width: 28px;}
+.css-11 {background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; overflow: hidden; min-height: 200px;}
+.css-13 {font-size: 1.125rem; font-weight: 600; margin: 0; color: var(--vscode-foreground);}
+.css-32 {background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; overflow: hidden;}
+.css-27 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; border-radius: 4px; cursor: pointer; opacity: 0; -webkit-transition: all 0.2s ease; transition: all 0.2s ease; color: var(--vscode-foreground);}
+.css-27:active {background: var(--vscode-toolbar-activeBackground);}
+.css-27:hover {background: var(--vscode-toolbar-hoverBackground); color: var(--vscode-errorForeground);}
+.css-26 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 8px; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0;}
+.css-38 {margin: 8px 0;}
+.css-40 h3 {font-size: 13px; font-weight: 600; margin: 0; width: 100%;}
+.css-40 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 8px;}
+@media (min-width: 640px) {.css-7 {display: block;}}
+@media (min-width: 768px) {.css-4 {font-size: 1.875rem;}}
+@media (min-width: 768px) {.css-7 {font-size: 1.875rem;}}
+
+/* DOM */
+<div>
+  <div
+    class="css-0"
+  >
+    <div
+      class="css-1"
+    >
+      <div
+        class="css-2"
+      >
+        <div
+          style="position: relative;"
+        >
+          <div
+            class="css-3"
+            role="button"
+            tabindex="0"
+            title="Click to edit name"
+          >
+            <h1
+              class="css-4"
+              style="opacity: 1;"
+            >
+              My Project
+            </h1>
+            <div
+              class="edit-title-icon-wrapper css-5"
+            >
+              <div
+                class="css-6"
+              >
+                <i
+                  class="codicon codicon-edit"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <h2
+          class="css-7"
+        >
+          Project
+        </h2>
+      </div>
+    </div>
+    <div
+      class="css-8"
+    >
+      <div
+        class="css-9"
+      >
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-11"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                Integrations & Libraries
+              </h2>
+              <div
+                class="css-14"
+              >
+                <div
+                  class="css-15"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-16"
+                    >
+                      <i
+                        class="fw-bi-ai-chat"
+                        style="position: relative; top: 2px;"
+                      />
+                    </div>
+                     Generate with AI
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+                <div
+                  class="css-15"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-17"
+                    >
+                      <i
+                        class="codicon codicon-add"
+                      />
+                    </div>
+                     Add
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="css-18"
+            >
+              <div
+                class="css-19"
+              >
+                <div
+                  class="css-20"
+                >
+                  <div
+                    class="css-21"
+                  >
+                    <div
+                      class="css-22"
+                      title="Order Service"
+                    >
+                      <div
+                        class="css-23"
+                      >
+                        <div
+                          class="css-24"
+                        >
+                          <i
+                            class="codicon codicon-project"
+                            style="font-size: 25px; opacity: 0.85;"
+                          />
+                        </div>
+                      </div>
+                      <p
+                        class="css-25"
+                      >
+                        Order Service
+                      </p>
+                    </div>
+                    <div
+                      class="css-26"
+                    >
+                      <button
+                        class="delete-button css-27"
+                        title="Delete integration"
+                      >
+                        <div
+                          class="css-28"
+                        >
+                          <i
+                            class="codicon codicon-trash"
+                            style="font-size: 18px;"
+                          />
+                        </div>
+                      </button>
+                      <div
+                        class="css-28"
+                      >
+                        <i
+                          class="codicon codicon-chevron-right"
+                          style="font-size: 18px; opacity: 0.5;"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="css-29"
+                  >
+                    <div
+                      class="css-30"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="css-20"
+                >
+                  <div
+                    class="css-21"
+                  >
+                    <div
+                      class="css-22"
+                      title="Utils Library"
+                    >
+                      <div
+                        class="css-23"
+                      >
+                        <div
+                          class="css-24"
+                        >
+                          <i
+                            class="codicon codicon-library"
+                            style="font-size: 25px; opacity: 0.85;"
+                          />
+                        </div>
+                      </div>
+                      <p
+                        class="css-25"
+                      >
+                        Utils Library
+                      </p>
+                    </div>
+                    <div
+                      class="css-26"
+                    >
+                      <button
+                        class="delete-button css-27"
+                        title="Delete library"
+                      >
+                        <div
+                          class="css-28"
+                        >
+                          <i
+                            class="codicon codicon-trash"
+                            style="font-size: 18px;"
+                          />
+                        </div>
+                      </button>
+                      <div
+                        class="css-28"
+                      >
+                        <i
+                          class="codicon codicon-chevron-right"
+                          style="font-size: 18px; opacity: 0.5;"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="css-29"
+                  >
+                    <div
+                      class="css-30"
+                    >
+                      <div
+                        class="css-31"
+                        color="var(--vscode-charts-foreground)"
+                      >
+                        Library
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-32"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                README
+              </h2>
+              <div
+                class="css-14"
+              >
+                <div
+                  class="css-15"
+                >
+                  <vscode-button
+                    style="padding: 4px 8px;"
+                  >
+                    <div
+                      class="css-33"
+                    >
+                      <i
+                        class="fw-bi-edit"
+                      />
+                    </div>
+                     Edit
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="css-34"
+            >
+              <p
+                class="css-35 css-36"
+              >
+                Document your project, integrations, and libraries
+              </p>
+              <vscode-link>
+                Add a README
+              </vscode-link>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div
+        class="css-37"
+      >
+        <div>
+          <h3
+            class="css-38"
+          >
+            Deployment Options
+          </h3>
+          <div
+            class="css-39"
+          >
+            <div
+              class="css-40"
+            >
+              <div
+                class="css-41"
+              >
+                <i
+                  class="codicon codicon-triangle-right"
+                />
+              </div>
+              <h3>
+                Deploy with Docker
+              </h3>
+            </div>
+            <div
+              class="css-42"
+            >
+              <p
+                style="margin-top: 8px;"
+              >
+                Create Docker image(s) of your integration(s) and deploy them to any Docker-enabled system.
+              </p>
+              <div
+                class="css-15"
+              >
+                <vscode-button
+                  title="No deployable integration found"
+                >
+                  Create Docker Image
+                  <input
+                    disabled=""
+                    slot="form-associated-proxy"
+                    style="display: none;"
+                    type="undefined"
+                  />
+                </vscode-button>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-39"
+          >
+            <div
+              class="css-40"
+            >
+              <div
+                class="css-41"
+              >
+                <i
+                  class="codicon codicon-triangle-right"
+                />
+              </div>
+              <h3>
+                Deploy on a VM
+              </h3>
+            </div>
+            <div
+              class="css-42"
+            >
+              <p
+                style="margin-top: 8px;"
+              >
+                Create self-contained Ballerina executable(s) and run them on any system with Java installed.
+              </p>
+              <div
+                class="css-15"
+              >
+                <vscode-button
+                  title="No deployable integration found"
+                >
+                  Create Executable
+                  <input
+                    disabled=""
+                    slot="form-associated-proxy"
+                    style="display: none;"
+                    type="undefined"
+                  />
+                </vscode-button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="css-43"
+        />
+        <div>
+          <h3
+            class="css-38"
+          >
+            Integration Control Plane
+          </h3>
+          <p>
+            Monitor the deployment runtime using WSO2 Integration Control Plane.
+            <vscode-link
+              style="margin-left: 4px;"
+            >
+               Learn More 
+            </vscode-link>
+          </p>
+          <p
+            class="css-35 css-44"
+            style="margin-bottom: 8px;"
+          >
+            0/1 integrations are ICP-enabled
+          </p>
+          <div
+            class="css-15"
+          >
+            <vscode-button>
+              <div
+                class="css-45"
+              >
+                Enable ICP for all integrations
+              </div>
+              <input
+                slot="form-associated-proxy"
+                style="display: none;"
+                type="undefined"
+              />
+            </vscode-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>"
+`;
+
+exports[`WorkspaceOverview snapshots renders project with single integration correctly: single-integration 1`] = `
+"/* Emotion Styles */
+.css-22 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 12px; -webkit-flex: 1; -ms-flex: 1; flex: 1; min-width: 0; line-height: 1;}
+.css-19 {display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; width: 100%;}
+.css-14 {display: flex; gap: 8px; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-43 {font-weight: normal; font-size: 13px; margin: unset;}
+.css-33 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 12px; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; padding: 32px 24px 48px 24px; text-align: center;}
+.css-42 {border-top: 1px solid var(--vscode-editorIndentGuide-background); margin: 16px 0;}
+.css-0 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; height: 100vh; overflow: hidden;}
+.css-21 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; gap: 12px;}
+.css-41 {max-height: 0; overflow: hidden; -webkit-transition: max-height 0.3s ease-in-out; transition: max-height 0.3s ease-in-out; margin-top: 0;}
+.css-23 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0;}
+.css-38 {cursor: pointer; border: none; background: transparent; border-radius: 6px; display: flex; overflow: hidden; width: 100%; padding: 10px; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; margin-bottom: 8px;}
+.css-38:hover {background: var(--vscode-welcomePage-tileHoverBackground);}
+.css-10 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 16px;}
+.css-9 {display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 24px; min-height: 0;}
+.css-8 {-webkit-flex: 1; -ms-flex: 1; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px; display: grid; grid-template-columns: 3fr 1fr; gap: 24px;}
+.css-44 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 6px;}
+.css-35 {font-weight: normal; font-size: 14px; letter-spacing: 0.149px; margin: unset;}
+.css-25 {font-weight: 500; font-size: 15px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-flex: 1; -ms-flex: 1; flex: 1; display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-2 {display: flex; -webkit-align-items: flex-end; -webkit-box-align: flex-end; -ms-flex-align: flex-end; align-items: flex-end; gap: 8px; position: relative;}
+.css-36 {padding: 0px 10px 10px 10px;}
+.css-15 {display: flex; height: fit-content; width: fit-content;}
+.css-16 {height: 16px; width: 14px; cursor: pointer; margin-right: 4px;}
+.css-30 {display: flex; -webkit-box-flex-wrap: wrap; -webkit-flex-wrap: wrap; -ms-flex-wrap: wrap; flex-wrap: wrap; gap: 6px; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; min-height: 28px;}
+.css-34 {color: var(--vscode-descriptionForeground);}
+.css-4 {font-weight: bold; font-size: 1.5rem; margin-bottom: 0; margin-top: 0; -webkit-transition: opacity 0.40s ease; transition: opacity 0.40s ease;}
+.css-24 {height: 25px; width: 25px; cursor: pointer;}
+.css-18 {padding: 0 20px 20px 20px;}
+.css-40 {height: 16px; width: 14px; cursor: pointer; color: inherit;}
+.css-17 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px;}
+.css-32 {height: 16px; width: 14px; cursor: pointer; margin-right: 8px; font-size: 16px;}
+.css-7 {display: none; font-weight: 200; font-size: 1.5rem; opacity: 0.3; margin-bottom: 0; margin-top: 0;}
+.css-29 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; gap: 10px;}
+.css-20 {position: relative; display: flex; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; gap: 12px; padding: 16px 20px; background: var(--vscode-sideBar-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; cursor: pointer; -webkit-transition: all 0.2s ease; transition: all 0.2s ease;}
+.css-20:active {-webkit-transform: translateY(0); -moz-transform: translateY(0); -ms-transform: translateY(0); transform: translateY(0);}
+.css-20:hover .delete-button {opacity: 1;}
+.css-20:hover {background: var(--vscode-list-hoverBackground); border-color: var(--vscode-focusBorder); -webkit-transform: translateY(-2px); -moz-transform: translateY(-2px); -ms-transform: translateY(-2px); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
+.css-12 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 20px 0 20px; margin-bottom: 16px;}
+.css-1 {display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 20px 24px; background: var(--vscode-editor-background); border-bottom: 1px solid var(--vscode-dropdown-border); -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; margin: 16px 16px 0 16px;}
+.css-5 {opacity: 0; max-width: 0; overflow: hidden; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0; -webkit-transition: opacity 0.2s,max-width 0.2s; transition: opacity 0.2s,max-width 0.2s; display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center;}
+.css-28 {height: 16px; width: 14px; cursor: pointer;}
+.css-6 {height: 16px; width: 16px; cursor: pointer; color: var(--vscode-descriptionForeground); font-size: 14px;}
+.css-3 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 6px; cursor: pointer; outline: none;}
+.css-3:is(:hover, :focus-visible) .edit-title-icon-wrapper {opacity: 1; max-width: 28px;}
+.css-11 {background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; overflow: hidden; min-height: 200px;}
+.css-13 {font-size: 1.125rem; font-weight: 600; margin: 0; color: var(--vscode-foreground);}
+.css-31 {background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; overflow: hidden;}
+.css-27 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; -webkit-justify-content: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; border-radius: 4px; cursor: pointer; opacity: 0; -webkit-transition: all 0.2s ease; transition: all 0.2s ease; color: var(--vscode-foreground);}
+.css-27:active {background: var(--vscode-toolbar-activeBackground);}
+.css-27:hover {background: var(--vscode-toolbar-hoverBackground); color: var(--vscode-errorForeground);}
+.css-26 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 8px; -webkit-flex-shrink: 0; -ms-flex-negative: 0; flex-shrink: 0;}
+.css-37 {margin: 8px 0;}
+.css-39 h3 {font-size: 13px; font-weight: 600; margin: 0; width: 100%;}
+.css-39 {display: flex; -webkit-align-items: center; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 8px;}
+@media (min-width: 640px) {.css-7 {display: block;}}
+@media (min-width: 768px) {.css-4 {font-size: 1.875rem;}}
+@media (min-width: 768px) {.css-7 {font-size: 1.875rem;}}
+
+/* DOM */
+<div>
+  <div
+    class="css-0"
+  >
+    <div
+      class="css-1"
+    >
+      <div
+        class="css-2"
+      >
+        <div
+          style="position: relative;"
+        >
+          <div
+            class="css-3"
+            role="button"
+            tabindex="0"
+            title="Click to edit name"
+          >
+            <h1
+              class="css-4"
+              style="opacity: 1;"
+            >
+              My Project
+            </h1>
+            <div
+              class="edit-title-icon-wrapper css-5"
+            >
+              <div
+                class="css-6"
+              >
+                <i
+                  class="codicon codicon-edit"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <h2
+          class="css-7"
+        >
+          Project
+        </h2>
+      </div>
+    </div>
+    <div
+      class="css-8"
+    >
+      <div
+        class="css-9"
+      >
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-11"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                Integrations & Libraries
+              </h2>
+              <div
+                class="css-14"
+              >
+                <div
+                  class="css-15"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-16"
+                    >
+                      <i
+                        class="fw-bi-ai-chat"
+                        style="position: relative; top: 2px;"
+                      />
+                    </div>
+                     Generate with AI
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+                <div
+                  class="css-15"
+                >
+                  <vscode-button>
+                    <div
+                      class="css-17"
+                    >
+                      <i
+                        class="codicon codicon-add"
+                      />
+                    </div>
+                     Add
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="css-18"
+            >
+              <div
+                class="css-19"
+              >
+                <div
+                  class="css-20"
+                >
+                  <div
+                    class="css-21"
+                  >
+                    <div
+                      class="css-22"
+                      title="Order Service"
+                    >
+                      <div
+                        class="css-23"
+                      >
+                        <div
+                          class="css-24"
+                        >
+                          <i
+                            class="codicon codicon-project"
+                            style="font-size: 25px; opacity: 0.85;"
+                          />
+                        </div>
+                      </div>
+                      <p
+                        class="css-25"
+                      >
+                        Order Service
+                      </p>
+                    </div>
+                    <div
+                      class="css-26"
+                    >
+                      <button
+                        class="delete-button css-27"
+                        title="Delete integration"
+                      >
+                        <div
+                          class="css-28"
+                        >
+                          <i
+                            class="codicon codicon-trash"
+                            style="font-size: 18px;"
+                          />
+                        </div>
+                      </button>
+                      <div
+                        class="css-28"
+                      >
+                        <i
+                          class="codicon codicon-chevron-right"
+                          style="font-size: 18px; opacity: 0.5;"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="css-29"
+                  >
+                    <div
+                      class="css-30"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          class="css-10"
+        >
+          <div
+            class="css-31"
+          >
+            <div
+              class="css-12"
+            >
+              <h2
+                class="css-13"
+              >
+                README
+              </h2>
+              <div
+                class="css-14"
+              >
+                <div
+                  class="css-15"
+                >
+                  <vscode-button
+                    style="padding: 4px 8px;"
+                  >
+                    <div
+                      class="css-32"
+                    >
+                      <i
+                        class="fw-bi-edit"
+                      />
+                    </div>
+                     Edit
+                    <input
+                      slot="form-associated-proxy"
+                      style="display: none;"
+                      type="undefined"
+                    />
+                  </vscode-button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="css-33"
+            >
+              <p
+                class="css-34 css-35"
+              >
+                Document your project, integrations, and libraries
+              </p>
+              <vscode-link>
+                Add a README
+              </vscode-link>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div
+        class="css-36"
+      >
+        <div>
+          <h3
+            class="css-37"
+          >
+            Deployment Options
+          </h3>
+          <div
+            class="css-38"
+          >
+            <div
+              class="css-39"
+            >
+              <div
+                class="css-40"
+              >
+                <i
+                  class="codicon codicon-triangle-right"
+                />
+              </div>
+              <h3>
+                Deploy with Docker
+              </h3>
+            </div>
+            <div
+              class="css-41"
+            >
+              <p
+                style="margin-top: 8px;"
+              >
+                Create Docker image(s) of your integration(s) and deploy them to any Docker-enabled system.
+              </p>
+              <div
+                class="css-15"
+              >
+                <vscode-button
+                  class="disabled"
+                  disabled=""
+                  title="No deployable integration found"
+                >
+                  Create Docker Image
+                  <input
+                    disabled=""
+                    slot="form-associated-proxy"
+                    style="display: none;"
+                    type="undefined"
+                  />
+                </vscode-button>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-38"
+          >
+            <div
+              class="css-39"
+            >
+              <div
+                class="css-40"
+              >
+                <i
+                  class="codicon codicon-triangle-right"
+                />
+              </div>
+              <h3>
+                Deploy on a VM
+              </h3>
+            </div>
+            <div
+              class="css-41"
+            >
+              <p
+                style="margin-top: 8px;"
+              >
+                Create self-contained Ballerina executable(s) and run them on any system with Java installed.
+              </p>
+              <div
+                class="css-15"
+              >
+                <vscode-button
+                  class="disabled"
+                  disabled=""
+                  title="No deployable integration found"
+                >
+                  Create Executable
+                  <input
+                    disabled=""
+                    slot="form-associated-proxy"
+                    style="display: none;"
+                    type="undefined"
+                  />
+                </vscode-button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="css-42"
+        />
+        <div>
+          <h3
+            class="css-37"
+          >
+            Integration Control Plane
+          </h3>
+          <p>
+            Monitor the deployment runtime using WSO2 Integration Control Plane.
+            <vscode-link
+              style="margin-left: 4px;"
+            >
+               Learn More 
+            </vscode-link>
+          </p>
+          <p
+            class="css-34 css-43"
+            style="margin-bottom: 8px;"
+          >
+            0/1 integrations are ICP-enabled
+          </p>
+          <div
+            class="css-15"
+          >
+            <vscode-button>
+              <div
+                class="css-44"
+              >
+                Enable ICP for all integrations
+              </div>
+              <input
+                slot="form-associated-proxy"
+                style="display: none;"
+                type="undefined"
+              />
+            </vscode-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>"
+`;
