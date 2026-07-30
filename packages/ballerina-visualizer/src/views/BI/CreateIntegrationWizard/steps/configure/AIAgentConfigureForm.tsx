@@ -60,8 +60,9 @@ interface AIAgentConfigureFormProps {
 /**
  * Step 3 for the AI Chat Agent — collects only the agent name (mirroring
  * AIChatAgentWizard's single input and validation rules; the duplicate-service
- * check is skipped since the project is brand-new). The agent's multi-RPC
- * creation orchestration runs post-reload via the pre-filled AIChatAgentWizard.
+ * check is skipped since the project is brand-new). The agent's multi-step
+ * creation orchestration runs in the extension host once the package exists
+ * (`features/bi/ai-chat-agent.ts`), narrated by a progress notification.
  */
 export function AIAgentConfigureForm({ isSubmitting, onSubmit }: AIAgentConfigureFormProps) {
     const [name, setName] = useState("");

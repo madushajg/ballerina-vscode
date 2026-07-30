@@ -50,7 +50,6 @@ import {
     openInVSCode
 } from "../../utils/bi";
 import { checkAndRunPendingEnhancement } from "../ai/migration/orchestrator";
-import { checkAndRunPendingArtifact } from "./pending-artifact";
 import { createVersionNumber, findBallerinaPackageRoot, isSupportedSLVersion } from ".././../utils";
 import { extension } from "../../BalExtensionContext";
 import { VisualizerWebview } from "../../views/visualizer/webview";
@@ -304,16 +303,33 @@ export function activate(context: BallerinaExtension) {
     openBallerinaTomlFile(context);
 
     // After the language server and project are fully ready, check whether a
-    // Create Integration wizard artifact and/or a migration AI enhancement was
-    // scheduled before the last folder reload. The wizard artifact must run
-    // first so it wins the webview navigation race.
+    // migration AI enhancement was scheduled before the last folder reload.
+    //
+    // The Create Integration wizard's pending artifact is NOT run here: it now runs
+    // in the machine's `finalizePendingIntegration` state, which is entered before
+    // `extensionReady`, so the visualizer keeps narrating the create instead of
+    // flashing an overview of a package whose artifact does not exist yet.
     const service = StateMachine.service();
+    const runStartupHandoffs = () => {
+        checkAndRunPendingEnhancement()
+            .catch((err) => console.error("[MigrationEnhancement] Unexpected error:", err));
+    };
+
+    // The machine can already be in `extensionReady` by the time this runs — the
+    // language server and project structure resolve independently of activation
+    // order — and subscribing does NOT help in that case: xstate invokes the
+    // subscriber synchronously with the current state, before `subscribe()` has
+    // returned, so `subscription` is still undefined and unsubscribing inside the
+    // callback throws before the handoffs are ever reached. Check the snapshot
+    // first and only subscribe when the transition is genuinely still ahead of us.
+    if (service.getSnapshot().value === "extensionReady") {
+        runStartupHandoffs();
+        return;
+    }
     const subscription = service.subscribe((state) => {
-        if (state.value === "extensionReady" && state.changed) {
-            subscription.unsubscribe();
-            checkAndRunPendingArtifact()
-                .then(() => checkAndRunPendingEnhancement())
-                .catch((err) => console.error("[MigrationEnhancement] Unexpected error:", err));
+        if (state.value === "extensionReady") {
+            subscription?.unsubscribe();
+            runStartupHandoffs();
         }
     });
 }

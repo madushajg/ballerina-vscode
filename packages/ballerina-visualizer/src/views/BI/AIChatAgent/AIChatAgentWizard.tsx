@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { AvailableNode, CDModel, CodeData, EVENT_TYPE, NodeKind } from '@wso2/ballerina-core';
+import { AvailableNode, CDModel, CodeData, EVENT_TYPE, NodeKind, toAgentBaseName, toAgentCamelCase } from '@wso2/ballerina-core';
 import { View, ViewContent, TextField, Button, Typography } from '@wso2/ui-toolkit';
 import styled from '@emotion/styled';
 import { useRpcContext } from '@wso2/ballerina-rpc-client';
@@ -80,41 +80,12 @@ export interface AIChatAgentWizardProps {
 const AI_CHAT_AGENT_LISTENER = "chatAgentListener";
 const AI_WSO2_MODEL_PROVIDER = "wso2ModelProvider";
 const MODEL = "Model";
-const KNOWN_SUFFIXES = ["agent", "model"];
 
-function toCamelCase(name: string): string {
-    // Split on spaces/underscores, convert to camelCase
-    const words = name.trim().split(/[\s_]+/).filter(Boolean);
-    if (words.length === 0) return "";
-    const firstWord = words[0];
-    // Lowercase leading acronyms: "HR" -> "hr", "HTMLParser" -> "htmlParser"
-    const leadingUpper = firstWord.match(/^[A-Z]+/);
-    let lowerFirst: string;
-    if (leadingUpper && leadingUpper[0].length === firstWord.length) {
-        // Entire word is uppercase: "HR" -> "hr"
-        lowerFirst = firstWord.toLowerCase();
-    } else if (leadingUpper && leadingUpper[0].length > 1) {
-        // Acronym followed by more chars: "HRPolicy" -> "hrPolicy"
-        lowerFirst = leadingUpper[0].slice(0, -1).toLowerCase() + firstWord.slice(leadingUpper[0].length - 1);
-    } else {
-        lowerFirst = firstWord.charAt(0).toLowerCase() + firstWord.slice(1);
-    }
-    return lowerFirst
-        + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join("");
-}
-
-function toBaseName(name: string): string {
-    const camel = toCamelCase(name);
-    // Strip known suffixes to avoid e.g. "salesAgentAgent"
-    const lower = camel.toLowerCase();
-    for (const suffix of KNOWN_SUFFIXES) {
-        if (lower.endsWith(suffix) && lower.length > suffix.length) {
-            return camel.slice(0, -suffix.length);
-        }
-    }
-    return camel;
-}
-
+// Identifier derivation is shared with the extension host's agent orchestration
+// (`features/bi/ai-chat-agent.ts`), so a name entered here and a name configured in
+// the Create Integration wizard yield the same declarations.
+const toCamelCase = toAgentCamelCase;
+const toBaseName = toAgentBaseName;
 
 export function AIChatAgentWizard(props: AIChatAgentWizardProps) {
     // module name for ai agent

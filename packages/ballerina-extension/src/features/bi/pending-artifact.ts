@@ -30,6 +30,7 @@ import {
 import { openView, StateMachine } from "../../stateMachine";
 import { ServiceDesignerRpcManager } from "../../rpc-managers/service-designer/rpc-manager";
 import { BiDiagramRpcManager } from "../../rpc-managers/bi-diagram/rpc-manager";
+import { createAiChatAgent } from "./ai-chat-agent";
 import {
     clearPendingIntegrationPointer,
     isPendingPointerFresh,
@@ -46,6 +47,48 @@ const ARTIFACT_KIND_LABELS = INTEGRATION_ARTIFACT_LABELS;
 
 function pendingArtifactFilePath(projectRoot: string): string {
     return path.join(projectRoot, PENDING_ARTIFACT_RELATIVE_PATH);
+}
+
+/**
+ * Where the window should land once the startup generation finishes, and whether
+ * landings are currently being deferred.
+ *
+ * The startup run happens in the `finalizePendingIntegration` machine state, which
+ * sits BEFORE `extensionReady` precisely so the visualizer keeps showing the
+ * "Creating <name>" screen for the whole create instead of flashing an empty
+ * package overview first. `OPEN_VIEW` is only handled from `extensionReady`
+ * onwards, so navigating from inside that state would be silently dropped —
+ * hence the landing is recorded here and replayed by
+ * {@link runPendingIntegrationLanding} once the machine is ready to accept it.
+ *
+ * `generateArtifactInPlace` does not defer: it runs in an already-ready window.
+ */
+let deferLandings = false;
+let deferredLanding: (() => void) | undefined;
+
+/** Navigates now, or records the landing when the startup run is deferring. */
+function land(navigate: () => void): void {
+    if (deferLandings) {
+        deferredLanding = navigate;
+        return;
+    }
+    navigate();
+}
+
+/**
+ * Performs the landing recorded by the startup run. Called as the machine enters
+ * `extensionReady`, which is the earliest point an `OPEN_VIEW` is accepted.
+ * A no-op when there was no pending create.
+ *
+ * Also stops deferring, so a generation still running (startup gave up waiting on
+ * it — see the timeout in `finalizePendingIntegration`) navigates immediately when
+ * it eventually finishes, rather than recording a landing nothing will replay.
+ */
+export function runPendingIntegrationLanding(): void {
+    deferLandings = false;
+    const landing = deferredLanding;
+    deferredLanding = undefined;
+    landing?.();
 }
 
 /**
@@ -89,12 +132,14 @@ export async function schedulePendingIntegration(
  * Safe to call on every activation — a no-op when there is no pending entry.
  * Never throws.
  *
- * No progress notification is raised here: while this runs the visualizer is
- * still showing the "Creating <name>" startup screen carried over from the
- * wizard, so a toast on top of it would narrate the same wait twice. Only the
- * failure path notifies.
+ * No progress notification is raised for the artifact kinds that generate in one
+ * language-server call: while those run the visualizer is still showing the
+ * "Creating <name>" startup screen carried over from the wizard, so a toast on top
+ * of it would narrate the same wait twice. The AI chat agent is the exception —
+ * see {@link runGeneration}.
  */
 export async function checkAndRunPendingArtifact(): Promise<void> {
+    deferLandings = true;
     try {
         const stored = readPendingIntegrationPointer();
         if (!stored) {
@@ -149,11 +194,12 @@ export async function checkAndRunPendingArtifact(): Promise<void> {
             `opensStoredPackage=${opensStoredPackage}, insideOpenWorkspace=${insideOpenWorkspace}, ` +
             `addedIntoWorkspace=${addedIntoWorkspace}`
         );
+        let navigated = false;
         try {
             // Standalone: land on the package overview (the package's home). Added
             // into a workspace: don't drill into the package — the landing below
             // puts the window on the workspace overview instead.
-            await generatePendingArtifact(payload, stored.projectRoot, opensStoredPackage);
+            navigated = await runGeneration(payload, stored.projectRoot, opensStoredPackage, label);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             console.error(`[IntegrationWizard] Failed to generate pending ${payload.kind} artifact:`, error);
@@ -162,41 +208,35 @@ export async function checkAndRunPendingArtifact(): Promise<void> {
                 `Your integration was created; you can add the artifact from the Artifacts panel.`
             );
         }
-        // Whether generation navigated on its own (standalone lands on the package
-        // overview; the AI agent path opens its own wizard), deliberately did not
-        // (added into a workspace), or failed outright, the window must never be
-        // left sitting on the startup screen that was narrating the create.
-        ensureLandedOnNewIntegration(stored, opensStoredPackage);
+        // Generation picks its own landing when it succeeds (the generated artifact,
+        // or the new package's overview). When it did not — an artifact added into a
+        // workspace, or a failed generation — fall back, so the window is never left
+        // sitting on the startup screen that was narrating the create.
+        if (!navigated) {
+            ensureLandedOnNewIntegration(stored, opensStoredPackage);
+        }
     } catch (error) {
         console.error("[IntegrationWizard] Unexpected error while checking pending artifact:", error);
+    } finally {
+        deferLandings = false;
     }
 }
 
 /**
  * Guarantees the window ends up on a real view after a wizard create, instead of
- * sitting on the startup progress screen.
- *
- * Acts only when nothing has navigated yet — the machine still being in
- * `extensionReady` means no view has been opened at all — so it stays a no-op on
- * the paths that navigate themselves (standalone package overview, the AI agent
- * wizard) and does the work on the ones that don't: an empty integration with
- * nothing to generate, a package added into a workspace, or a failed generation.
+ * sitting on the startup progress screen. Used only when generation did not pick a
+ * landing itself: an empty integration with nothing to generate, a package added
+ * into a workspace, or a failed generation.
  */
 function ensureLandedOnNewIntegration(
     pointer: PendingIntegrationArtifactPointer,
     opensStoredPackage: boolean
 ): void {
-    // Read the raw machine value rather than `StateMachine.state()`: the shared
-    // `MachineStateValue` type predates the startup states and does not include
-    // `extensionReady`, which is exactly the one being tested here.
-    if (StateMachine.service().getSnapshot().value !== "extensionReady") {
-        return;
-    }
     if (opensStoredPackage) {
         openPackageOverview(pointer.projectRoot);
         return;
     }
-    openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.WorkspaceOverview });
+    land(() => openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.WorkspaceOverview }));
 }
 
 /**
@@ -248,15 +288,18 @@ export async function generateArtifactInPlace(
     }
 
     try {
-        await window.withProgress(
+        const navigated = await window.withProgress(
             { location: ProgressLocation.Notification, title: `Setting up your ${label}...` },
-            () => generatePendingArtifact(payload, packageRoot, landOnPackageOverview)
+            (progress) =>
+                generatePendingArtifact(payload, packageRoot, landOnPackageOverview, (message) =>
+                    progress.report({ message })
+                )
         );
         // A non-silent refresh ends on the workspace overview (see UPDATE_PROJECT_INFO
         // in stateMachine.ts) — right for the add-into-open-workspace path, but it
-        // would clobber the package overview just navigated to above, showing the
-        // workspace overview and then jumping. Refresh silently in that case.
-        StateMachine.refreshProjectInfo({ silent: landOnPackageOverview });
+        // would clobber the view just navigated to above, showing the workspace
+        // overview and then jumping. Refresh silently whenever generation navigated.
+        StateMachine.refreshProjectInfo({ silent: navigated });
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error(`[IntegrationWizard] Failed to generate ${payload.kind} artifact in place:`, error);
@@ -265,6 +308,34 @@ export async function generateArtifactInPlace(
             `Your integration was created; you can add the artifact from the Artifacts panel.`
         );
     }
+}
+
+/**
+ * Runs {@link generatePendingArtifact}, wrapped in a progress notification for the
+ * kinds whose generation is long enough to need one.
+ *
+ * SERVICE / AUTOMATION / WORKFLOW generate in a single language-server call while
+ * the visualizer still shows the "Creating <name>" startup screen, so they need no
+ * toast. The AI chat agent is a multi-step orchestration — model provider, agent,
+ * listener, service, plus the module pulls in between — and the step-by-step
+ * notification is the same feedback the in-package "add an agent" flow gives.
+ */
+async function runGeneration(
+    payload: PendingIntegrationArtifactPayload,
+    projectRoot: string,
+    landOnPackageOverview: boolean,
+    label: string
+): Promise<boolean> {
+    if (payload.kind !== "AI_CHAT_AGENT") {
+        return generatePendingArtifact(payload, projectRoot, landOnPackageOverview);
+    }
+    return window.withProgress(
+        { location: ProgressLocation.Notification, title: `Setting up your ${label}...` },
+        (progress) =>
+            generatePendingArtifact(payload, projectRoot, landOnPackageOverview, (message) =>
+                progress.report({ message })
+            )
+    );
 }
 
 /**
@@ -277,12 +348,16 @@ export async function generateArtifactInPlace(
  * package (land on its overview); false when added into a workspace, so the
  * window stays on the project (workspace) overview it opened on rather than
  * auto-switching into the new package.
+ *
+ * Returns whether it navigated, so callers know not to clobber the view with a
+ * subsequent project-info refresh.
  */
 async function generatePendingArtifact(
     payload: PendingIntegrationArtifactPayload,
     projectRoot: string,
-    landOnPackageOverview: boolean
-): Promise<void> {
+    landOnPackageOverview: boolean,
+    onProgress?: (message: string) => void
+): Promise<boolean> {
     switch (payload.kind) {
         case "SERVICE": {
             if (!payload.serviceInitModel) {
@@ -298,7 +373,7 @@ async function generatePendingArtifact(
             if (landOnPackageOverview) {
                 openPackageOverview(projectRoot);
             }
-            return;
+            return landOnPackageOverview;
         }
         case "AUTOMATION":
         case "WORKFLOW": {
@@ -315,17 +390,32 @@ async function generatePendingArtifact(
             if (landOnPackageOverview) {
                 openPackageOverview(projectRoot);
             }
-            return;
+            return landOnPackageOverview;
         }
         case "AI_CHAT_AGENT": {
-            // Pragmatic v1: the agent's multi-RPC orchestration stays webview-side —
-            // land on the AI Chat Agent wizard with the chosen name carried on the
-            // existing `identifier` field of the visualizer location.
-            openView(EVENT_TYPE.OPEN_VIEW, {
-                view: MACHINE_VIEW.AIChatAgentWizard,
-                identifier: payload.aiAgent?.name,
-            });
-            return;
+            const agentName = payload.aiAgent?.name?.trim();
+            if (!agentName) {
+                throw new Error("The AI chat agent configuration is missing");
+            }
+            // Generated here, in the extension host, against `projectRoot` — the same
+            // orchestration the in-package AI Chat Agent form runs. Earlier this branch
+            // only opened that form pre-filled and relied on the user pressing Create
+            // again, which is why the wizard produced an empty integration.
+            const { serviceArtifact } = await createAiChatAgent({ projectRoot, agentName, onProgress });
+            if (serviceArtifact) {
+                // Land on the generated agent, matching where the in-package flow ends.
+                land(() =>
+                    openView(EVENT_TYPE.OPEN_VIEW, {
+                        documentUri: serviceArtifact.path,
+                        position: serviceArtifact.position,
+                    })
+                );
+                return true;
+            }
+            if (landOnPackageOverview) {
+                openPackageOverview(projectRoot);
+            }
+            return landOnPackageOverview;
         }
         default:
             throw new Error(`Unsupported artifact kind: ${(payload as PendingIntegrationArtifactPayload).kind}`);
@@ -340,5 +430,5 @@ async function generatePendingArtifact(
  * (where the context has no active `projectPath`).
  */
 function openPackageOverview(projectRoot: string): void {
-    openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.PackageOverview, projectPath: projectRoot });
+    land(() => openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.PackageOverview, projectPath: projectRoot }));
 }

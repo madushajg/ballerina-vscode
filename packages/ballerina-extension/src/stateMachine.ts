@@ -67,6 +67,16 @@ interface MachineContext extends VisualizerLocation {
     isViewUpdateTransition?: boolean;
 }
 
+/**
+ * How long startup waits for a Create Integration wizard's pending first artifact
+ * before continuing without it. Generous on purpose — the AI chat agent pulls
+ * modules on a cold cache — but bounded, so a stalled generation degrades to the
+ * artifact appearing late rather than a window stuck on the loading screen.
+ */
+const PENDING_INTEGRATION_TIMEOUT_MS = 5 * 60 * 1000;
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 export let history: History;
 export let undoRedoManager: IUndoRedoManager;
 let pendingProjectRootUpdateResolvers: Array<() => void> = [];
@@ -285,7 +295,7 @@ const stateMachine = createMachine<MachineContext>(
                 invoke: {
                     src: 'registerProjectArtifactsStructure',
                     onDone: {
-                        target: "extensionReady",
+                        target: "finalizePendingIntegration",
                         actions: [
                             assign({
                                 projectStructure: (context, event) => event.data.projectStructure
@@ -299,6 +309,34 @@ const stateMachine = createMachine<MachineContext>(
                         actions: () => {
                             console.error("Error occurred while fetching project structure.");
                         }
+                    }
+                }
+            },
+            /**
+             * Finishes a Create Integration wizard submit that spanned the folder
+             * reload, BEFORE the window is announced as ready.
+             *
+             * It sits here rather than on the `extensionReady` transition so the
+             * visualizer keeps showing its "Creating <name>" screen for the whole
+             * create — every state that is not `viewActive.viewReady` renders that
+             * screen. Running it after `extensionReady` let other listeners navigate
+             * first, so the user briefly landed on an overview of a package whose
+             * artifact did not exist yet, and only then saw it being generated.
+             *
+             * `OPEN_VIEW` is not accepted until `extensionReady`, so the landing the
+             * generation chose is replayed on the way out (`runPendingIntegrationLanding`).
+             * Never blocks startup: the service resolves even when generation fails,
+             * and a window with nothing pending passes straight through.
+             */
+            finalizePendingIntegration: {
+                invoke: {
+                    src: 'finalizePendingIntegration',
+                    onDone: {
+                        target: "extensionReady",
+                        actions: (context, event) => event.data?.land?.()
+                    },
+                    onError: {
+                        target: "extensionReady"
                     }
                 }
             },
@@ -555,6 +593,35 @@ const stateMachine = createMachine<MachineContext>(
                     resolve({ projectStructure: undefined });
                 }
             });
+        },
+        // Generates the wizard's pending first artifact, if this window was opened to
+        // finish one. Never rejects — a failure here must not strand startup in a
+        // non-ready state — so the machine always continues to `extensionReady`.
+        //
+        // Imported lazily, and handing its landing back through the result, because
+        // `pending-artifact` imports this module: a static import would close the
+        // cycle, and the landing must run only once `extensionReady` can accept an
+        // `OPEN_VIEW`.
+        finalizePendingIntegration: async () => {
+            const pendingArtifact = await import('./features/bi/pending-artifact');
+            // Startup must never be held hostage by a generation that stalls (a module
+            // pull that never returns, a language server that goes quiet), which would
+            // strand the window on the loading screen with no way forward. Give up
+            // waiting after a generous cap and let the window become usable; the
+            // generation keeps running and navigates on its own when it finishes,
+            // which is the old behaviour rather than a hang.
+            let timedOut = false;
+            await Promise.race([
+                pendingArtifact.checkAndRunPendingArtifact(),
+                delay(PENDING_INTEGRATION_TIMEOUT_MS).then(() => { timedOut = true; }),
+            ]);
+            if (timedOut) {
+                console.warn(
+                    `[IntegrationWizard] Pending artifact generation exceeded ` +
+                    `${PENDING_INTEGRATION_TIMEOUT_MS / 1000}s; continuing startup without waiting for it.`
+                );
+            }
+            return { land: pendingArtifact.runPendingIntegrationLanding };
         },
         // Opens the panel for a view activation: blocks until the webview is ready,
         // because the states that follow push a view and rely on `stateChanged`
