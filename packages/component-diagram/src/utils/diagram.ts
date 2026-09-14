@@ -21,8 +21,8 @@ import {
     NodeLinkFactory,
     NodeLinkModel,
     NodeLinkModelOptions,
+    orthogonalizePoints,
     Point2D,
-    sampleBezierPath,
 } from "../components/NodeLink";
 import { OverlayLayerFactory } from "../components/OverlayLayer";
 import { DagreEngine } from "../resources/dagre/DagreEngine";
@@ -346,13 +346,6 @@ export function getPortAnchorY(node: NodeModel, port: PortModel | null | undefin
 }
 
 /**
- * Samples per bezier segment used when asking where a link actually runs. A segment spans a few
- * hundred px at most in this layout, so ~64 chords keep the polyline within a small fraction of a
- * pixel of the true curve - far finer than the node boxes (>= 64px tall) being tested against.
- */
-const CURVE_SAMPLES_PER_SEGMENT = 64;
-
-/**
  * Whether the segment `a`-`b` touches `box`, via Liang-Barsky parametric clipping: the segment is
  * inside the box's X slab over some range of `t`, inside its Y slab over another, and touches the
  * box exactly when those ranges still overlap inside `[0, 1]` after both are applied. A segment
@@ -377,9 +370,10 @@ function segmentIntersectsBox(a: Point2D, b: Point2D, box: BoundingBox): boolean
 }
 
 /**
- * Whether a link's sampled curve (see `sampleBezierPath`) passes through `box`. Takes the sampled
- * polyline rather than the curve's control points so one link can be tested against many boxes
- * without re-sampling it for each.
+ * Whether the orthogonal shape (see `orthogonalizePoints`) a link would actually be drawn as
+ * passes through `box`. Since every leg of that shape is a straight axis-aligned segment - no
+ * bezier bulge to account for - this tests the exact rendered geometry, not an approximation of
+ * it: no sampling needed, unlike this diagram's previous (bezier) rendering style.
  */
 function polylineCrossesBox(polyline: Point2D[], box: BoundingBox): boolean {
     return polyline.slice(1).some((point, index) => segmentIntersectsBox(polyline[index], point, box));
@@ -436,33 +430,39 @@ export function getLinkAnchors(link: NodeLinkModel): LinkAnchors | null {
  * instead - above or below whichever node(s) are in the way - rather than through it.
  *
  * The check is purely geometric - it doesn't know or care that the "workflow" column is the one
- * usually in the way - and it asks the question against the curve NodeLinkModel actually paints,
- * by sampling the very same bezier segments (see sampleBezierPath / getBezierSegments) rather
- * than against the straight chord between the link's endpoints.
+ * usually in the way - and it asks the question against the exact shape NodeLinkModel actually
+ * paints (see `orthogonalizePoints`), not a straight chord between the link's endpoints: a link
+ * with a vertical offset renders as a horizontal-vertical-horizontal elbow, whose vertical leg
+ * sits at a fixed X (the midpoint between source and target) rather than tracking a chord's
+ * gradually-changing Y - a node sitting near that X could be missed entirely by a chord-based
+ * check while still being cut through by the actual elbow. Because every leg of that shape is a
+ * straight axis-aligned segment, this is an exact test (Liang-Barsky segment/box intersection),
+ * not an approximation sampled from a curve - the small rounding `NodeLinkModel.getSVGPath()`
+ * applies on top can only pull a corner further from an obstruction, never closer (see the
+ * rounding safety argument in NodeLinkModel.ts), so testing the sharp-cornered shape here is
+ * still exactly correct for what actually gets painted.
  *
- * Testing the chord is what this pass used to do, and it is *not* a safe approximation: with a
- * horizontal tangent forced at both ends, a link deliberately bows away from its chord by up to
- * half the segment's height. A `GET /f` function row linking to the lower of two connections
- * passed 0.3px clear of a stacked workflow node's top edge as a chord while the drawn curve
- * entered that node by 4.4px - visible as a link clipping the box's corner, with this pass
- * reporting nothing wrong. Sampling the real curve removes that whole class of near-miss by
- * construction, instead of trying to cover the bow with a bigger clearance margin.
+ * One known limit, deliberate at this size of diagram: every obstruction collapses into one
+ * `[columnLeft, columnRight]` hull, so the detour is shaped for a single contiguous band of
+ * obstructions - today's only case, since exactly one column can sit between two others. Two
+ * *disjoint* intervening columns would be routed as though the gap between them were blocked
+ * too; handling those needs one bend pair per contiguous X-cluster, which the N-point path
+ * builder already supports.
  *
- * Two known limits, both deliberate at this size of diagram:
- * - Every obstruction collapses into one `[columnLeft, columnRight]` hull, so the detour is shaped
- *   for a single contiguous band of obstructions - today's only case, since exactly one column can
- *   sit between two others. Two *disjoint* intervening columns would be routed as though the gap
- *   between them were blocked too; handling those needs one bend pair per contiguous X-cluster,
- *   which the N-point path builder already supports.
- * - Lanes are chosen per link against the nodes only, so two links passing the same column can be
- *   assigned the same lane Y and render collinear along it. Nothing is hidden (both still reach
- *   their endpoints), and separating them means feeding already-assigned lanes back into the
- *   blocked bands - a whole-diagram concern rather than a per-link one.
+ * Two links that would otherwise land on the same lane through the same column are kept apart:
+ * each link's chosen lane is recorded, and a later link routing through an overlapping column
+ * treats every lane already claimed there as its own blocked band, the same way it treats a real
+ * obstruction's box - so two parallel detours end up on visibly distinct lanes instead of
+ * rendering collinear.
  */
 export function avoidLinkObstructions(engine: DiagramEngine) {
     const model = engine.getModel();
     const allNodes = model.getNodes() as NodeModel[];
     const links = model.getLinks().filter((linkModel): linkModel is NodeLinkModel => linkModel instanceof NodeLinkModel);
+
+    // Lanes already claimed by an earlier link in this same pass, so a later link routing through
+    // an overlapping column can steer clear of them too - see the "kept apart" paragraph above.
+    const claimedLanes: Array<{ columnLeft: number; columnRight: number; y: number }> = [];
 
     // Every node's box is fixed for the rest of this pass (autoDistribute finalizes positions
     // before calling this), so it's computed once per node here rather than once per (link, node)
@@ -491,9 +491,9 @@ export function avoidLinkObstructions(engine: DiagramEngine) {
             return; // same or overlapping columns - no horizontal span for anything to sit in
         }
 
-        // Every node whose X-range overlaps the link's own horizontal span at all. Since a
-        // segment's curve never leaves the span between its endpoints' X coordinates (see
-        // getBezierSegments), no other node can possibly be crossed - and defining the set by
+        // Every node whose X-range overlaps the link's own horizontal span at all. Since an
+        // orthogonal leg never leaves the span between its own two endpoints' X coordinates (see
+        // orthogonalizePoints), no other node can possibly be crossed - and defining the set by
         // overlap rather than by "sits strictly between the two columns" is what makes the detour
         // construction below provably safe.
         const obstructions = allNodes
@@ -502,16 +502,17 @@ export function avoidLinkObstructions(engine: DiagramEngine) {
             .filter((box) => box.right > anchorLeft.x && box.left < anchorRight.x);
         if (obstructions.length === 0) {
             // The common case - most links span adjacent columns with nothing between them - so
-            // this is checked before sampling the curve below, not just via `.some()` on an empty
+            // this is checked before building the shape below, not just via `.some()` on an empty
             // array (which would short-circuit to the same result either way, but only after
-            // paying for the sample).
+            // paying to build it).
             return;
         }
 
-        // Sampled once and reused for every box below, and again for `naiveY` - it's the same
-        // curve throughout, and sampling is the expensive part of this pass.
-        const polyline = sampleBezierPath([anchorLeft, anchorRight], CURVE_SAMPLES_PER_SEGMENT);
-        if (!obstructions.some((box) => polylineCrossesBox(polyline, box))) {
+        // What this link would actually be drawn as if left alone - see orthogonalizePoints for
+        // why this, and not the straight chord between the two anchors, is the shape that has to
+        // be tested.
+        const undetouredShape = orthogonalizePoints([anchorLeft, anchorRight]);
+        if (!obstructions.some((box) => polylineCrossesBox(undetouredShape, box))) {
             return;
         }
 
@@ -534,22 +535,29 @@ export function avoidLinkObstructions(engine: DiagramEngine) {
             return;
         }
 
-        // Where the link currently runs as it passes the obstructing column - the lane closest to
-        // this is the one that disturbs the link's shape least.
-        const columnCenterX = (columnLeft + columnRight) / 2;
-        const naiveY = polyline.reduce((closest, point) =>
-            Math.abs(point.x - columnCenterX) < Math.abs(closest.x - columnCenterX) ? point : closest
-        ).y;
+        // Where the link currently runs as it passes the obstructing column: the un-detoured
+        // shape's vertical leg sits at a single X regardless of where the column is, so there's no
+        // single "closest point" to read off it the way a curve would have one - the middle of
+        // that leg (the average of the two anchors' Y) is the natural stand-in, and the lane
+        // closest to it is the one that disturbs the link's shape least.
+        const naiveY = (anchorLeft.y + anchorRight.y) / 2;
 
         // Every Y band the lane must stay out of: each obstruction's box inflated by the clearance
-        // margin, with overlapping bands merged. Merging - rather than assuming the boxes are
-        // disjoint and more than 2x the margin apart - is what guarantees the chosen lane clears
-        // *all* of them: two nodes sitting closer together than that (or overlapping outright, as
-        // nodes in different columns caught by the span test may well do) collapse into a single
-        // blocked band instead of leaving a phantom gap between them for the lane to land in.
+        // margin, plus every already-claimed lane whose own column overlaps this one (so two
+        // links routed through the same column can't land on the same lane - see the "kept apart"
+        // paragraph above), with overlapping bands merged. Merging - rather than assuming the
+        // bands are disjoint and more than 2x the margin apart - is what guarantees the chosen
+        // lane clears *all* of them: two bands sitting closer together than that (or overlapping
+        // outright, as bands from different sources may well do) collapse into a single blocked
+        // band instead of leaving a phantom gap between them for the lane to land in.
+        const conflictingLanes = claimedLanes.filter(
+            (lane) => lane.columnRight > columnLeft && lane.columnLeft < columnRight
+        );
         const blockedBands: Array<{ top: number; bottom: number }> = [];
-        obstructions
-            .map((box) => ({ top: box.top - LINK_DETOUR_MARGIN, bottom: box.bottom + LINK_DETOUR_MARGIN }))
+        [
+            ...obstructions.map((box) => ({ top: box.top - LINK_DETOUR_MARGIN, bottom: box.bottom + LINK_DETOUR_MARGIN })),
+            ...conflictingLanes.map((lane) => ({ top: lane.y - LINK_DETOUR_MARGIN, bottom: lane.y + LINK_DETOUR_MARGIN })),
+        ]
             .sort((a, b) => a.top - b.top)
             .forEach((band) => {
                 const previous = blockedBands[blockedBands.length - 1];
@@ -582,11 +590,16 @@ export function avoidLinkObstructions(engine: DiagramEngine) {
             }
         });
 
+        // This lane is now claimed for any later link routing through an overlapping column (see
+        // the "kept apart" paragraph above).
+        claimedLanes.push({ columnLeft, columnRight, y: laneY });
+
         // Why the resulting `source -> bend1 -> bend2 -> target` link is clear of every
-        // obstruction, without needing to re-test the new curve:
+        // obstruction, without needing to re-test the shape it renders as:
         // - The middle segment is flat at laneY (its endpoints share that Y - see
-        //   getBezierSegments), and laneY sits at least LINK_DETOUR_MARGIN clear of every
-        //   obstruction's box by construction of the lanes above.
+        //   orthogonalizePoints), and laneY sits at least LINK_DETOUR_MARGIN clear of every
+        //   obstruction's box and every other link's lane through this column, by construction of
+        //   the lanes above.
         // - The outer segments stay within their own endpoints' X spans, [anchorLeft.x, columnLeft
         //   - detourX] and [columnRight + detourX, anchorRight.x]. No obstruction reaches either
         //   band: columnLeft/columnRight are the extremes of the whole obstruction set, so every

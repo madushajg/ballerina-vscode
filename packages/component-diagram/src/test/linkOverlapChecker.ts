@@ -22,16 +22,16 @@
  *
  * It drives the *production* pipeline end to end - `buildDiagramData` (the same graph
  * `Diagram.tsx` builds) -> `autoDistribute` (which positions every column and internally runs
- * `avoidLinkObstructions`) -> the real bezier geometry every link is painted from - then samples
- * each link's curve and tests it against every *other* node's real bounding box.
+ * `avoidLinkObstructions`) -> the real rounded-orthogonal geometry every link is painted from -
+ * then samples each link's path and tests it against every *other* node's real bounding box.
  *
  * Nothing here re-derives layout or path math: node boxes come from `getNodeBoundingBox`, endpoint
- * anchors from the shared `getLinkAnchors`, and the curve from `sampleBezierPath` - the same
- * function `avoidLinkObstructions` routes with, and (via `getBezierSegments`) the same geometry
- * `getSVGPath` serializes. `assertPathMatchesGeometry` pins that last equivalence per link so the
- * points sampled here are provably the ones the widget draws.
+ * anchors from the shared `getLinkAnchors`, the axis-aligned shape from `orthogonalizePoints`, and
+ * the sampled path from `sampleRoundedOrthogonalPath` - the same functions `avoidLinkObstructions`
+ * routes with and `getSVGPath` serializes. `assertPathMatchesGeometry` pins that last equivalence
+ * per link so the points sampled here are provably the ones the widget draws.
  *
- * What is deliberately *not* shared is the collision test. Production asks "does this curve touch
+ * What is deliberately *not* shared is the collision test. Production asks "does this shape touch
  * the box at all" to decide whether to reroute; this file asks "how far inside the box does it
  * get" with its own point-in-box math, so a passing suite means something independent of the
  * predicate the pass makes its decision with.
@@ -47,7 +47,13 @@ import {
     getLinkAnchors,
     getNodeBoundingBox,
 } from "../utils/diagram";
-import { buildBezierPath, NodeLinkModel, Point2D, sampleBezierPath } from "../components/NodeLink";
+import {
+    buildRoundedOrthogonalPath,
+    NodeLinkModel,
+    orthogonalizePoints,
+    Point2D,
+    sampleRoundedOrthogonalPath,
+} from "../components/NodeLink";
 import { NodeModel } from "../utils/types";
 import { EntryNodeModel } from "../components/nodes/EntryNode";
 import { ConnectionNodeModel } from "../components/nodes/ConnectionNode";
@@ -55,14 +61,15 @@ import { ListenerNodeModel } from "../components/nodes/ListenerNode";
 import { GQLState } from "../components/Diagram";
 
 /**
- * Samples taken along each cubic segment of a link's path. A segment spans at most a few hundred
- * px here, so ~200 samples put consecutive samples well under a pixel apart - fine enough that a
- * curve can't slip through a node box (tens of px tall) between two samples.
+ * Samples taken along each rounded corner of a link's path. Its radius is small (~10px), so this
+ * puts consecutive samples well under a pixel apart there - the straight legs between corners need
+ * no sampling at all (see sampleRoundedOrthogonalPath), fine enough that the path can't slip
+ * through a node box (tens of px tall) undetected anywhere along its length.
  */
 const SAMPLES_PER_SEGMENT = 200;
 
 /**
- * How far inside a node's box a sample must fall before it counts as a real crossing. A curve that
+ * How far inside a node's box a sample must fall before it counts as a real crossing. A path that
  * merely grazes a border (sub-pixel) is visually indistinguishable from one running alongside it,
  * and reporting those would make the check noisy without describing anything a user can see.
  */
@@ -71,10 +78,10 @@ const CROSSING_TOLERANCE = 0.5;
 interface LinkCrossing {
     /** e.g. `entry "/f" [get-f] -> connection "ftpClient" [in]` */
     link: string;
-    /** the unrelated node the link's curve enters, e.g. `entry "workflow2" (workflow)` */
+    /** the unrelated node the link's path enters, e.g. `entry "workflow2" (workflow)` */
     node: string;
     nodeBox: BoundingBox;
-    /** deepest distance (px) the curve reaches inside `nodeBox`, measured from its nearest edge */
+    /** deepest distance (px) the path reaches inside `nodeBox`, measured from its nearest edge */
     penetration: number;
     /** the sampled point at which that deepest penetration occurs */
     deepestPoint: Point2D;
@@ -129,10 +136,11 @@ function getLinkGeometry(link: NodeLinkModel): Point2D[] | null {
 /**
  * Asserts that the path the widget would render for `link` is the one built from `points`, by
  * moving the link's endpoint points onto their anchors (what a browser's port measurements would
- * have done) and comparing `getSVGPath()` against the same points serialized.
+ * have done) and comparing `getSVGPath()` against the same points, orthogonalized and serialized
+ * the same way `getSVGPath()` itself does.
  *
  * This is what lets the sampling below use `points` directly instead of re-parsing the `d` string:
- * it proves per link that the two describe the same curve, rather than assuming it.
+ * it proves per link that the two describe the same shape, rather than assuming it.
  */
 function assertPathMatchesGeometry(link: NodeLinkModel, points: Point2D[]): void {
     const linkPoints = link.getPoints();
@@ -140,7 +148,7 @@ function assertPathMatchesGeometry(link: NodeLinkModel, points: Point2D[]): void
     linkPoints[linkPoints.length - 1].setPosition(points[points.length - 1].x, points[points.length - 1].y);
 
     const rendered = link.getSVGPath();
-    const expected = buildBezierPath(points);
+    const expected = buildRoundedOrthogonalPath(orthogonalizePoints(points));
     if (rendered !== expected) {
         throw new Error(
             `Link's rendered path does not match its geometry.\n  rendered: ${rendered}\n  expected: ${expected}`
@@ -181,7 +189,7 @@ function describeLink(link: NodeLinkModel): string {
 }
 
 /**
- * Samples every link's rendered curve against every node that isn't one of its own endpoints, and
+ * Samples every link's rendered path against every node that isn't one of its own endpoints, and
  * returns the deepest crossing found per (link, node) pair, worst first.
  */
 function findLinkNodeCrossings(project: CDModel): LinkCrossing[] {
@@ -195,7 +203,7 @@ function findLinkNodeCrossings(project: CDModel): LinkCrossing[] {
             return;
         }
         assertPathMatchesGeometry(link, points);
-        const samples = sampleBezierPath(points, SAMPLES_PER_SEGMENT);
+        const samples = sampleRoundedOrthogonalPath(orthogonalizePoints(points), SAMPLES_PER_SEGMENT);
 
         boxes.forEach((box, node) => {
             if (node === link.sourceNode || node === link.targetNode) {

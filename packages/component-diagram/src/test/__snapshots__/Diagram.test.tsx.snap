@@ -126,13 +126,13 @@ exports[`Component Diagram - Snapshot Tests renders ai agent complex correctly: 
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -181,13 +181,13 @@ exports[`Component Diagram - Snapshot Tests renders ai agent complex correctly: 
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -236,13 +236,13 @@ exports[`Component Diagram - Snapshot Tests renders ai agent complex correctly: 
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -983,13 +983,13 @@ exports[`Component Diagram - Snapshot Tests renders connections complex correctl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -1038,13 +1038,13 @@ exports[`Component Diagram - Snapshot Tests renders connections complex correctl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -1820,13 +1820,13 @@ exports[`Component Diagram - Snapshot Tests renders graphql complex correctly: g
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -1875,13 +1875,13 @@ exports[`Component Diagram - Snapshot Tests renders graphql complex correctly: g
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -1930,13 +1930,13 @@ exports[`Component Diagram - Snapshot Tests renders graphql complex correctly: g
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -1985,13 +1985,13 @@ exports[`Component Diagram - Snapshot Tests renders graphql complex correctly: g
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -2882,13 +2882,13 @@ exports[`Component Diagram - Snapshot Tests renders multiple connections complex
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -2937,13 +2937,13 @@ exports[`Component Diagram - Snapshot Tests renders multiple connections complex
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -2992,13 +2992,13 @@ exports[`Component Diagram - Snapshot Tests renders multiple connections complex
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -3047,13 +3047,13 @@ exports[`Component Diagram - Snapshot Tests renders multiple connections complex
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -3935,13 +3935,13 @@ exports[`Component Diagram - Snapshot Tests renders multiple services correctly:
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -4554,13 +4554,13 @@ exports[`Component Diagram - Snapshot Tests renders simple service correctly: si
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -4966,13 +4966,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 206 970 206 C 1130 206 1130 206 1290 206 C 845 206 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 216 Q 970 206 980 206 L 1280 206 Q 1290 206 1290 216 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 206 970 206 C 1130 206 1130 206 1290 206 C 845 206 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 216 Q 970 206 980 206 L 1280 206 Q 1290 206 1290 216 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -5021,13 +5021,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 206 970 206 C 1130 206 1130 206 1290 206 C 845 206 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 200 Q 970 190 980 190 L 1280 190 Q 1290 190 1290 200 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 206 970 206 C 1130 206 1130 206 1290 206 C 845 206 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 200 Q 970 190 980 190 L 1280 190 Q 1290 190 1290 200 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -5076,13 +5076,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 82 970 82 C 1130 82 1130 82 1290 82 C 845 82 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 92 Q 970 82 980 82 L 1280 82 Q 1290 82 1290 92 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 82 970 82 C 1130 82 1130 82 1290 82 C 845 82 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 92 Q 970 82 980 82 L 1280 82 Q 1290 82 1290 92 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -5131,13 +5131,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -5186,13 +5186,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -5241,13 +5241,13 @@ exports[`Component Diagram - Snapshot Tests renders stacked workflows overlap co
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -6214,13 +6214,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow function-port overl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 188 970 188 C 1130 188 1130 188 1290 188 C 845 188 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 198 Q 970 188 980 188 L 1280 188 Q 1290 188 1290 198 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 188 970 188 C 1130 188 1130 188 1290 188 C 845 188 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 198 Q 970 188 980 188 L 1280 188 Q 1290 188 1290 198 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -6269,13 +6269,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow function-port overl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 310 970 310 C 1130 310 1130 310 1290 310 C 845 310 845 300 400 300"
+              d="M 400 300 L 965 300 Q 970 300 970 305 L 970 307.5 Q 970 310 972.5 310 L 1285 310 Q 1290 310 1290 305 L 1290 302.5 Q 1290 300 1287.5 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 310 970 310 C 1130 310 1130 310 1290 310 C 845 310 845 300 400 300"
+              d="M 400 300 L 965 300 Q 970 300 970 305 L 970 307.5 Q 970 310 972.5 310 L 1285 310 Q 1290 310 1290 305 L 1290 302.5 Q 1290 300 1287.5 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -6324,13 +6324,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow function-port overl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 82 970 82 C 1130 82 1130 82 1290 82 C 845 82 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 92 Q 970 82 980 82 L 1280 82 Q 1290 82 1290 92 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 82 970 82 C 1130 82 1130 82 1290 82 C 845 82 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 92 Q 970 82 980 82 L 1280 82 Q 1290 82 1290 92 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -6379,13 +6379,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow function-port overl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -6434,13 +6434,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow function-port overl
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 400 300 400 300 400 300"
+              d="M 400 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"
@@ -7395,13 +7395,13 @@ exports[`Component Diagram - Snapshot Tests renders workflow overlap correctly: 
             pointer-events="all"
           >
             <path
-              d="M 400 300 C 685 300 685 84 970 84 C 1130 84 1130 84 1290 84 C 845 84 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 94 Q 970 84 980 84 L 1280 84 Q 1290 84 1290 94 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="transparent"
               stroke-width="16"
             />
             <path
-              d="M 400 300 C 685 300 685 84 970 84 C 1130 84 1130 84 1290 84 C 845 84 845 300 400 300"
+              d="M 400 300 L 960 300 Q 970 300 970 290 L 970 94 Q 970 84 980 84 L 1280 84 Q 1290 84 1290 94 L 1290 290 Q 1290 300 1280 300 L 400 300"
               fill="none"
               stroke="var(--vscode-foreground)"
               stroke-opacity="0.7"

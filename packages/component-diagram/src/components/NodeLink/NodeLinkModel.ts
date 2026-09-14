@@ -29,127 +29,162 @@ export interface Point2D {
 }
 
 /**
- * Fraction of a segment's horizontal span used as its bezier control-point offset - a "smooth"
- * edge style where a link always leaves/enters a point horizontally regardless of how much
- * vertical distance it covers. 0.5 (half the horizontal distance on each
- * end) reads as a clear, consistent S-curve at this diagram's scale (NODE_GAP_X=160,
- * ENTRY_NODE_WIDTH=240 - a typical inter-column segment is comfortably wider than the resulting
- * offset) without the curve looking over-bowed on longer segments.
+ * Below this vertical gap between two consecutive points, a jog would be a hairline the eye can't
+ * follow, so orthogonalizePoints draws a plain straight segment there instead of inserting one.
  */
-const LINK_CURVATURE = 0.5;
+const STRAIGHT_TOLERANCE = 8;
 
 /**
- * Floor on the control-point offset so a short segment still reads as gently curved rather than
- * snapping to a straight line. See buildBezierSegment for how it interacts with the hard cap that
- * keeps a control point from overshooting the far endpoint.
+ * Radius of the quadratic-bezier round applied to each interior corner of an orthogonal link (see
+ * buildRoundedOrthogonalPath). Small on purpose: this is softening a 90 degree turn, not drawing a
+ * curve - a bigger radius would start to look like the smooth S-curve style this replaced.
  */
-const LINK_MIN_CURVE_OFFSET = 20;
-
-/** One cubic-bezier segment of a link's path, in draw order. */
-interface BezierSegment {
-    start: Point2D;
-    control1: Point2D;
-    control2: Point2D;
-    end: Point2D;
-}
+const LINK_CORNER_RADIUS = 10;
 
 /**
- * Builds one cubic-bezier segment from `p0` to `p1`, horizontal at both ends: its control points
- * are `p0`/`p1` pushed horizontally toward each other by the same offset.
+ * Expands the logical waypoints a link is built from into a fully axis-aligned point list -
+ * `[source, target]` for a plain link, or `[source, bend1, bend2, target]` for one
+ * `avoidLinkObstructions` (utils/diagram.ts) routed around an obstruction, where
+ * `bend1.y === bend2.y` is the flat detour lane.
  *
- * `offset` is clamped to `[LINK_MIN_CURVE_OFFSET, |p1.x-p0.x|]` around a preferred value of
- * `|p1.x-p0.x| * LINK_CURVATURE` - the upper bound is what stops a short segment's control point
- * from overshooting the far endpoint and folding the curve back on itself; when the segment is
- * shorter than LINK_MIN_CURVE_OFFSET, that upper bound (the segment's own span) wins over the
- * floor, which is exactly what should happen. For a purely vertical segment (p1.x === p0.x) the
- * offset collapses to 0 - there's no horizontal distance to bow across, so the "segment" is
- * drawn as a straight vertical cubic (a degenerate curve, still valid, matching the rule that a
- * link only ever curves horizontally).
+ * Every node port sits at its own node's left (in) or right (out) edge (see `LeftPortWidget`/
+ * `RightPortWidget` in ConnectionNodeWidget.tsx/ListenerNodeWidget.tsx, and the equivalent
+ * first/last-child pairing for entry nodes), so a link should always leave its source and arrive
+ * at its target horizontally. This inserts one vertical jog per gap that isn't already aligned,
+ * skipping it entirely when the gap is under STRAIGHT_TOLERANCE (a jog that small would read as a
+ * pointless wiggle rather than a real corner).
+ *
+ * A plain 2-point link is neither a source nor a target at its bend, so the one jog it gets has to
+ * satisfy both ends at once: it sits at the horizontal midpoint between them, leaving source
+ * horizontally and, after the vertical run, arriving at target horizontally too.
+ *
+ * The 4-point case's middle leg (bend1 -> bend2) is already horizontal by construction and is left
+ * untouched; only the two outer legs, which run diagonally from a port to the lane today, get a
+ * jog each - leaving `source` horizontally to arrive at `bend1` vertically (the corner sits at
+ * `bend1`'s own X, since `bend1` is about to continue horizontally into the lane), and leaving
+ * `bend2` vertically to arrive at `target` horizontally (the corner sits at `bend2`'s own X, since
+ * `bend2` just finished running horizontally) - so every leg still leaves and arrives the way a
+ * port actually faces.
  */
-function buildBezierSegment(p0: Point2D, p1: Point2D): BezierSegment {
-    const dx = p1.x - p0.x;
-    const absDx = Math.abs(dx);
-    const magnitude = Math.min(Math.max(absDx * LINK_CURVATURE, LINK_MIN_CURVE_OFFSET), absDx);
-    const offset = Math.sign(dx) * magnitude;
-    return {
-        start: p0,
-        control1: { x: p0.x + offset, y: p0.y },
-        control2: { x: p1.x - offset, y: p1.y },
-        end: p1,
-    };
-}
-
-/**
- * The cubic-bezier segments a link through `points` (length >= 2) is drawn as - one per
- * consecutive pair. This is the single source of truth for a link's rendered shape: `buildBezierPath`
- * serializes exactly these segments, and `sampleBezierPath` samples exactly these segments, so
- * the layout pass that has to reason about where a link *actually* runs
- * (`avoidLinkObstructions` in utils/diagram.ts) can never drift out of sync with what's painted.
- *
- * Because each segment's control points are horizontal projections of its own endpoints,
- * consecutive segments meet at a shared point with matching (horizontal) tangent direction -
- * the whole chain reads as one seamless curve, with no visible kink at an old "corner" point.
- *
- * Two properties `avoidLinkObstructions` relies on, both direct consequences of that
- * construction:
- * - A segment's curve never leaves the horizontal span between its own two endpoints' X
- *   coordinates, since every control point's X lies between `p0.x` and `p1.x`. So a detour's
- *   outer segments cannot reach into the X-range its bend points were placed outside of.
- * - A segment whose endpoints share a Y is perfectly flat, since all four of its points then
- *   share that Y and the curve is their convex combination. So a detour's middle segment stays
- *   exactly on the computed lane Y, regardless of LINK_CURVATURE.
- *
- * What is emphatically *not* true - and what this API exists to stop callers from assuming - is
- * that a segment stays near the straight chord between its endpoints. With horizontal tangents at
- * both ends it deliberately bows away from that chord (that's the whole visual point), by up to
- * LINK_CURVATURE of the segment's height at the quarter points. See NodeLinkModel.test.ts for
- * numeric checks of all three claims.
- */
-function getBezierSegments(points: Point2D[]): BezierSegment[] {
-    return points.slice(1).map((point, index) => buildBezierSegment(points[index], point));
-}
-
-/**
- * Serializes `points` as an SVG path - `M` then one `C` per segment (see `getBezierSegments`) -
- * used uniformly for every link, whether it's a plain 2-point port-to-port link or a multi-point
- * detour `avoidLinkObstructions` (utils/diagram.ts) routed around an obstruction.
- */
-export function buildBezierPath(points: Point2D[]): string {
-    const commands = getBezierSegments(points).map(
-        ({ control1, control2, end }) => `C ${control1.x} ${control1.y} ${control2.x} ${control2.y} ${end.x} ${end.y}`
-    );
-    return [`M ${points[0].x} ${points[0].y}`, ...commands].join(" ");
-}
-
-/** The point at parameter `t` (0..1) on one cubic-bezier segment. */
-function pointOnSegment({ start, control1, control2, end }: BezierSegment, t: number): Point2D {
-    const u = 1 - t;
-    const a = u * u * u;
-    const b = 3 * u * u * t;
-    const c = 3 * u * t * t;
-    const d = t * t * t;
-    return {
-        x: a * start.x + b * control1.x + c * control2.x + d * end.x,
-        y: a * start.y + b * control1.y + c * control2.y + d * end.y,
-    };
-}
-
-/**
- * Approximates the curve drawn through `points` as a polyline of `samplesPerSegment` chords per
- * bezier segment (so `samplesPerSegment + 1` sampled points per segment, sharing each interior
- * endpoint with the next segment).
- *
- * This is how callers ask "where does this link actually run?" without duplicating the bezier
- * math - see `avoidLinkObstructions` in utils/diagram.ts, which needs the answer to decide whether
- * a link crosses a node it should be routed around.
- */
-export function sampleBezierPath(points: Point2D[], samplesPerSegment: number): Point2D[] {
-    const samples: Point2D[] = [points[0]];
-    getBezierSegments(points).forEach((segment) => {
-        for (let step = 1; step <= samplesPerSegment; step++) {
-            samples.push(pointOnSegment(segment, step / samplesPerSegment));
+export function orthogonalizePoints(points: Point2D[]): Point2D[] {
+    if (points.length <= 2) {
+        const source = points[0];
+        const target = points[points.length - 1];
+        // No lane to hand off to here - both ends are real ports, so the single jog has to leave
+        // source AND arrive at target horizontally. A corner at either endpoint's own X would
+        // satisfy one side but not the other, so it sits at the midpoint instead.
+        if (Math.abs(source.y - target.y) < STRAIGHT_TOLERANCE) {
+            return [source, target];
         }
-    });
+        const bendX = (source.x + target.x) / 2;
+        return [source, { x: bendX, y: source.y }, { x: bendX, y: target.y }, target];
+    }
+
+    const [source, bend1, bend2, target] = points;
+    // Leave `from` horizontally, arrive at `to` vertically: the corner sits at `to`'s own X. Used
+    // for the leg into the lane (source -> bend1), where `to` is about to continue horizontally.
+    const jogInto = (from: Point2D, to: Point2D): Point2D[] =>
+        Math.abs(from.y - to.y) < STRAIGHT_TOLERANCE ? [from, to] : [from, { x: to.x, y: from.y }, to];
+    // Leave `from` vertically, arrive at `to` horizontally: the corner sits at `from`'s own X. Used
+    // for the leg out of the lane (bend2 -> target), where `from` just finished running horizontally.
+    const jogOutOf = (from: Point2D, to: Point2D): Point2D[] =>
+        Math.abs(from.y - to.y) < STRAIGHT_TOLERANCE ? [from, to] : [from, { x: from.x, y: to.y }, to];
+
+    return [...jogInto(source, bend1), bend2, ...jogOutOf(bend2, target).slice(1)];
+}
+
+function distance(a: Point2D, b: Point2D): number {
+    return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+/** The point `length` away from `from`, heading towards `to` (clamped at `to`). */
+function towards(from: Point2D, to: Point2D, length: number): Point2D {
+    const total = distance(from, to);
+    if (total === 0) {
+        return from;
+    }
+    const t = Math.min(length, total) / total;
+    return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+}
+
+/**
+ * Serializes an already-orthogonalized point list (see `orthogonalizePoints`) as an SVG path:
+ * straight `L` segments between consecutive points, with every *interior* point - never the
+ * first or last, which are real port endpoints, not corners this function introduces - rounded
+ * into a short quadratic-bezier curve rather than a sharp corner.
+ *
+ * The curve's control point is the corner itself, and the approach/departure points sit `radius`
+ * back along the corner's incoming/outgoing segment (clamped to at most half of whichever
+ * adjacent segment is shorter, so two nearby corners' curves can never cross). That choice of
+ * control point is what makes the rounding safe to layer on top of `avoidLinkObstructions`'s
+ * routing without re-proving anything: a quadratic bezier is, at every t, a convex combination of
+ * its start, control, and end points, so it can never leave the triangle (approach, corner,
+ * departure) - it can only move *inward* from the corner, never bulge outward past where the
+ * sharp corner already was. Every corner here sits exactly where the routing pass already placed
+ * it with a safe margin, so rounding can only add clearance from an obstruction, never remove it -
+ * the same argument this diagram used for its previous (bezier) rendering style, simpler here
+ * since a straight segment's bounding box is just the segment, with no curve to bulge at all.
+ */
+export function buildRoundedOrthogonalPath(points: Point2D[]): string {
+    const [start, ...rest] = points;
+    let path = `M ${start.x} ${start.y}`;
+    let cursor = start;
+    for (let i = 0; i < rest.length - 1; i++) {
+        const corner = rest[i];
+        const next = rest[i + 1];
+        const radius = Math.min(LINK_CORNER_RADIUS, distance(cursor, corner) / 2, distance(corner, next) / 2);
+        if (radius <= 0) {
+            path += ` L ${corner.x} ${corner.y}`;
+            cursor = corner;
+            continue;
+        }
+        const approach = towards(corner, cursor, radius);
+        const departure = towards(corner, next, radius);
+        path += ` L ${approach.x} ${approach.y} Q ${corner.x} ${corner.y} ${departure.x} ${departure.y}`;
+        cursor = departure;
+    }
+    const end = rest[rest.length - 1];
+    path += ` L ${end.x} ${end.y}`;
+    return path;
+}
+
+/** The point at parameter `t` (0..1) on the quadratic bezier (start, control, end). */
+function pointOnQuadratic(start: Point2D, control: Point2D, end: Point2D, t: number): Point2D {
+    const u = 1 - t;
+    const a = u * u;
+    const b = 2 * u * t;
+    const c = t * t;
+    return { x: a * start.x + b * control.x + c * end.x, y: a * start.y + b * control.y + c * end.y };
+}
+
+/**
+ * Approximates the path `buildRoundedOrthogonalPath` draws through `points` as a dense polyline -
+ * a straight segment needs only its 2 endpoints (there's no curvature to miss), each small rounded
+ * corner gets `cornerSamples` real points along its actual curve.
+ *
+ * This is how a caller asks "where does this link actually run?" without duplicating the rounding
+ * math - see `test/linkOverlapChecker.ts`, which checks the real rendered path rather than
+ * asserting the safety argument above holds without looking.
+ */
+export function sampleRoundedOrthogonalPath(points: Point2D[], cornerSamples: number): Point2D[] {
+    const samples: Point2D[] = [points[0]];
+    const [start, ...rest] = points;
+    let cursor = start;
+    for (let i = 0; i < rest.length - 1; i++) {
+        const corner = rest[i];
+        const next = rest[i + 1];
+        const radius = Math.min(LINK_CORNER_RADIUS, distance(cursor, corner) / 2, distance(corner, next) / 2);
+        const approach = radius > 0 ? towards(corner, cursor, radius) : corner;
+        const departure = radius > 0 ? towards(corner, next, radius) : corner;
+        samples.push(approach);
+        if (radius > 0) {
+            for (let step = 1; step <= cornerSamples; step++) {
+                samples.push(pointOnQuadratic(approach, corner, departure, step / cornerSamples));
+            }
+        }
+        cursor = departure;
+    }
+    samples.push(rest[rest.length - 1]);
     return samples;
 }
 
@@ -222,12 +257,12 @@ export class NodeLinkModel extends DefaultLinkModel {
      * Waypoints get added by avoidLinkObstructions() (see utils/diagram.ts) to route a link
      * around a node it would otherwise cut through.
      *
-     * Every link - plain 2-point or multi-point detour alike - is drawn the same way: chained
-     * cubic-bezier segments through every point (see buildBezierPath), for a consistent curvy
-     * look across the whole diagram (a link always leaves/enters a point horizontally,
-     * regardless of its overall angle).
+     * Every link - plain 2-point or multi-point detour alike - is drawn the same way: its logical
+     * waypoints are expanded into a fully axis-aligned point list (see `orthogonalizePoints`) and
+     * serialized as gently-rounded 90 degree elbows (see `buildRoundedOrthogonalPath`), for a
+     * consistent architectural look across the whole diagram.
      */
     getSVGPath(): string {
-        return buildBezierPath(this.getPoints().map((point) => point.getPosition()));
+        return buildRoundedOrthogonalPath(orthogonalizePoints(this.getPoints().map((point) => point.getPosition())));
     }
 }

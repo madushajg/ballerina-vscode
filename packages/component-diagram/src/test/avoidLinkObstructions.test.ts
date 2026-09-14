@@ -270,6 +270,46 @@ describe("avoidLinkObstructions", () => {
         expect(clearsTall).toBe(true);
         expect(clearsShort).toBe(true);
     });
+
+    test("keeps two links that would otherwise land on the same lane through the same column on distinct lanes", () => {
+        // Two identically-shaped links (same source/target Y, same obstruction), run through a
+        // single avoidLinkObstructions pass together. Read in isolation each would resolve to the
+        // exact same nearest-free lane (naiveY=72 sits equidistant from the lane above and below
+        // the shared obstruction, so ties go to "above" for both) - only claimedLanes tracking the
+        // first link's choice across the same pass can push the second one onto a different lane.
+        const automationA = new EntryNodeModel(makeAutomation("automation-a"), "automation");
+        automationA.setPosition(ENTRY_X, 40); // box [40, 104], center 72
+
+        const automationB = new EntryNodeModel(makeAutomation("automation-b"), "automation");
+        automationB.setPosition(ENTRY_X, 40); // identical shape
+
+        const workflowNode = new EntryNodeModel(makeWorkflow("workflow-1"), "workflow");
+        workflowNode.height = calculateWorkflowNodeHeight(0);
+        workflowNode.setPosition(WORKFLOW_X, 40); // overlaps both links' naiveY (72), forcing a detour
+
+        const connectionA = new ConnectionNodeModel(makeConnection("connection-a"));
+        connectionA.setPosition(CONNECTION_X, 40);
+
+        const connectionB = new ConnectionNodeModel(makeConnection("connection-b"));
+        connectionB.setPosition(CONNECTION_X, 40);
+
+        const linkA = createNodesLink(automationA, connectionA) as NodeLinkModel;
+        const linkB = createNodesLink(automationB, connectionB) as NodeLinkModel;
+
+        const engine = generateEngine();
+        const model = new DiagramModel();
+        model.addAll(automationA, automationB, workflowNode, connectionA, connectionB, linkA, linkB);
+        engine.setModel(model);
+        avoidLinkObstructions(engine);
+
+        expect(linkA.getPoints()).toHaveLength(4);
+        expect(linkB.getPoints()).toHaveLength(4);
+        const laneA = linkA.getPoints()[1].getPosition().y;
+        const laneB = linkB.getPoints()[1].getPosition().y;
+
+        // Not just "different" - far enough apart that their own margin bands don't overlap either.
+        expect(Math.abs(laneA - laneB)).toBeGreaterThanOrEqual(2 * LINK_DETOUR_MARGIN);
+    });
 });
 
 describe("calculateEntryNodeHeight", () => {
