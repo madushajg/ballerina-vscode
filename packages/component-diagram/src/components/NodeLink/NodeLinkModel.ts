@@ -74,7 +74,14 @@ export function orthogonalizePoints(points: Point2D[]): Point2D[] {
         // source AND arrive at target horizontally. A corner at either endpoint's own X would
         // satisfy one side but not the other, so it sits at the midpoint instead.
         if (Math.abs(source.y - target.y) < STRAIGHT_TOLERANCE) {
-            return [source, target];
+            // Skipping the jog is only worth it if the result actually reads as level - leaving
+            // the two ends at their own slightly different Y (anywhere up to STRAIGHT_TOLERANCE
+            // apart) draws a faint diagonal instead, which over a long horizontal span is exactly
+            // as noticeable as a real, larger-angle line. Meeting in the middle keeps each end off
+            // its own true anchor by at most half the tolerance, rather than a visible full-width
+            // tilt.
+            const flatY = (source.y + target.y) / 2;
+            return [{ x: source.x, y: flatY }, { x: target.x, y: flatY }];
         }
         const bendX = (source.x + target.x) / 2;
         return [source, { x: bendX, y: source.y }, { x: bendX, y: target.y }, target];

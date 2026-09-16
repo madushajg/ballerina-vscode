@@ -75,9 +75,9 @@ function buildLinkWithPoints(points: Point2D[]): NodeLinkModel {
 }
 
 describe("orthogonalizePoints", () => {
-    test("leaves 2 endpoints untouched when they're already level (within STRAIGHT_TOLERANCE)", () => {
+    test("snaps 2 near-level endpoints (within STRAIGHT_TOLERANCE) flat instead of leaving a faint diagonal", () => {
         const points = orthogonalizePoints([{ x: 0, y: 100 }, { x: 300, y: 104 }]); // dy = 4
-        expect(points).toEqual([{ x: 0, y: 100 }, { x: 300, y: 104 }]);
+        expect(points).toEqual([{ x: 0, y: 102 }, { x: 300, y: 102 }]);
     });
 
     test("a plain 2-point link with different Y gets one midpoint bend, leaving/arriving horizontally", () => {
