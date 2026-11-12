@@ -60,6 +60,7 @@ import io.ballerina.flowmodelgenerator.extension.request.SearchRequest;
 import io.ballerina.flowmodelgenerator.extension.request.ServiceFieldNodesRequest;
 import io.ballerina.flowmodelgenerator.extension.request.SuggestedComponentRequest;
 import io.ballerina.flowmodelgenerator.extension.response.ComponentDeleteResponse;
+import io.ballerina.flowmodelgenerator.extension.response.ConnectionConfigurablesResponse;
 import io.ballerina.flowmodelgenerator.extension.response.CopilotContextResponse;
 import io.ballerina.flowmodelgenerator.extension.response.EnclosedFuncDefResponse;
 import io.ballerina.flowmodelgenerator.extension.response.FlowModelAvailableNodesResponse;
@@ -274,6 +275,28 @@ public class FlowModelGeneratorService implements ExtendedLanguageServerService 
                 SourceGenerator sourceGenerator =
                         new SourceGenerator(this.workspaceManagerProxy.get(), Path.of(request.filePath()));
                 response.setTextEdits(sourceGenerator.toSourceCode(request.flowNode(), lsClientLogger));
+            } catch (Throwable e) {
+                response.setError(e);
+            }
+            return response;
+        });
+    }
+
+    /**
+     * The configurable each literal of a new connection gets when it is saved, or why it can't get one, without
+     * changing anything. The connection form shows these beside the fields, and sends back what the user chose in
+     * each argument property's codedata.
+     */
+    @JsonRequest
+    public CompletableFuture<ConnectionConfigurablesResponse> getConnectionConfigurables(
+            FlowModelSourceGeneratorRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            ConnectionConfigurablesResponse response = new ConnectionConfigurablesResponse();
+            try {
+                SourceGenerator sourceGenerator =
+                        new SourceGenerator(this.workspaceManagerProxy.get(), Path.of(request.filePath()));
+                response.setConfigurables(
+                        sourceGenerator.previewConnectionConfigurables(request.flowNode(), lsClientLogger));
             } catch (Throwable e) {
                 response.setError(e);
             }

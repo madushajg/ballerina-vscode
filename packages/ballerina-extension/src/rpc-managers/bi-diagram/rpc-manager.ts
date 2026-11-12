@@ -64,6 +64,8 @@ import {
     WorkflowDataRequest,
     WorkflowDataResponse,
     BISourceCodeRequest,
+    ConnectionConfigurablesRequest,
+    ConnectionConfigurablesResponse,
     BISourceCodeResponse,
     BISuggestedFlowModelRequest,
     BI_COMMANDS,
@@ -357,6 +359,18 @@ export class BiDiagramRpcManager implements BIDiagramAPI {
                     resolve(undefined);
                 });
         });
+    }
+
+    /**
+     * The configurable each literal of a new connection gets when it is saved, without saving it, so the connection
+     * form can show the names beside the fields.
+     */
+    async getConnectionConfigurables(params: ConnectionConfigurablesRequest): Promise<ConnectionConfigurablesResponse> {
+        try {
+            return await StateMachine.langClient().getConnectionConfigurables(params);
+        } catch (error) {
+            return { configurables: [], errorMsg: error instanceof Error ? error.message : String(error) };
+        }
     }
 
     async getSourceCode(params: BISourceCodeRequest): Promise<UpdatedArtifactsResponse> {

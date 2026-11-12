@@ -24,7 +24,9 @@ import io.ballerina.compiler.api.symbols.TypeDefinitionSymbol;
 import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.flowmodelgenerator.core.UserFacingException;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables;
+import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Choice;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Configurable;
+import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Preview;
 import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.directory.BuildProject;
@@ -44,6 +46,7 @@ public class ConnectionConfigurablesTest {
     private static final Path PROJECT = Path.of("src/test/resources/connection_configurables");
     private RecordTypeSymbol config;
     private RecordTypeSymbol pool;
+    private RecordTypeSymbol client;
 
     @BeforeClass
     public void compile() {
@@ -53,6 +56,7 @@ public class ConnectionConfigurablesTest {
                 .getSemanticModel(currentPackage.getDefaultModule().moduleId());
         config = record(model, "Config");
         pool = record(model, "Pool");
+        client = record(model, "Client");
     }
 
     @Test
@@ -96,6 +100,71 @@ public class ConnectionConfigurablesTest {
                 "{timeout: 0x1.8p1}");
         Assert.assertEquals(configurables.configurables().stream().map(Configurable::configTomlEntry).toList(),
                 List.of("cPassword = \"tab\\t\"", "cRate = 2.5", "cSize = 0x10"));
+    }
+
+    @Test
+    public void aFieldTheUserKeepsStaysInSource() {
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false);
+        Assert.assertEquals(configurables.rewrite("{auth: {token: \"t\"}, url: \"u\", retries: 3}", "config", client,
+                false, Map.of("url", new Choice(null, true), "retries", new Choice(null, true))),
+                "{auth: {token: cAuthToken}, url: \"u\", retries: 3}");
+        Assert.assertEquals(configurables.configurables().stream().map(Configurable::declaration).toList(),
+                List.of("configurable string cAuthToken = ?;"));
+    }
+
+    @Test
+    public void aNameTheUserGivesIsUsedAsIs() {
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false);
+        Assert.assertEquals(configurables.rewrite("{auth: {token: \"t\"}, url: \"u\"}", "config", client, false,
+                Map.of("auth.token", new Choice("apiToken", false))), "{auth: {token: apiToken}, url: cUrl}");
+        Assert.assertEquals(configurables.configurables().stream().map(Configurable::declaration).toList(),
+                List.of("configurable string apiToken = ?;", "configurable string cUrl = ?;"));
+    }
+
+    @Test
+    public void aNameTheUserGivesThatIsTakenIsRefused() {
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false);
+        UserFacingException refusal = Assert.expectThrows(UserFacingException.class,
+                () -> configurables.rewrite("{auth: {token: \"t\"}, url: \"u\"}", "config", client, false,
+                        Map.of("auth.token", new Choice("shared", false), "url", new Choice("shared", false))));
+        Assert.assertEquals(refusal.getMessage(),
+                "Two of this connection's fields would both be configured by 'shared'.");
+    }
+
+    @Test
+    public void aNameTheUserGivesMustBeAnIdentifier() {
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false);
+        UserFacingException refusal = Assert.expectThrows(UserFacingException.class,
+                () -> configurables.rewrite("{url: \"u\"}", "config", client, false,
+                        Map.of("url", new Choice("my url", false))));
+        Assert.assertEquals(refusal.getMessage(),
+                "'my url' is not a valid name. Use letters, digits and _, and don't start with a digit.");
+    }
+
+    @Test
+    public void aPreviewNamesEachFieldWithoutRefusing() {
+        // Each field the form shows, by its path within the argument: the name saving gives it, the one a kept field
+        // would get, and why a clashing one gets none; the literals stay as they are.
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false, true);
+        configurables.rewrite("{auth: {token: \"t\"}, url: \"u\", retries: 3}", "config", client, false,
+                Map.of("url", new Choice("cAuthToken", false), "retries", new Choice(null, true)));
+        Assert.assertEquals(configurables.previews(), List.of(
+                new Preview("config", "auth.token", "cAuthToken", "string", false, false, null),
+                new Preview("config", "url", "cAuthToken", "string", false, false,
+                        "Two of this connection's fields would both be configured by 'cAuthToken'."),
+                new Preview("config", "retries", "cRetries", "int", false, true, null)));
+    }
+
+    @Test
+    public void choicesAreReadFromAPropertysCodedata() {
+        Map<String, Object> data = Map.of(
+                "auth.token", Map.of("name", " apiToken "),
+                "url", Map.of("keep", true),
+                "ignored", "not a choice");
+        Assert.assertEquals(Choice.fromData(data), Map.of(
+                "auth.token", new Choice("apiToken", false),
+                "url", new Choice(null, true)));
+        Assert.assertEquals(Choice.fromData(null), Map.of());
     }
 
     private static RecordTypeSymbol record(SemanticModel model, String name) {

@@ -10,3 +10,13 @@ type Config record {|
 type Pool record {|
     string? password = ();
 |};
+
+type Auth record {|
+    string token;
+|};
+
+type Client record {|
+    Auth auth;
+    string url?;
+    int retries?;
+|};

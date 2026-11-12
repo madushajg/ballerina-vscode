@@ -28,6 +28,7 @@ import io.ballerina.flowmodelgenerator.core.model.FormBuilder;
 import io.ballerina.flowmodelgenerator.core.model.NodeBuilder;
 import io.ballerina.flowmodelgenerator.core.model.NodeKind;
 import io.ballerina.flowmodelgenerator.core.model.Property;
+import io.ballerina.flowmodelgenerator.core.model.PropertyCodedata;
 import io.ballerina.flowmodelgenerator.core.model.SourceBuilder;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Configurable;
@@ -82,6 +83,11 @@ public class NewConnectionBuilder extends CallBuilder {
     private static final String CONNECTIONS_BAL = "connections.bal";
     private static final String CONFIG_BAL = "config.bal";
     private static final String CONFIG_TOML = "Config.toml";
+    /**
+     * The key in an argument property's codedata under which the connection form sends what the user chose for its
+     * fields' configurables.
+     */
+    public static final String CONFIGURABLES_DATA_KEY = "configurables";
     private static final String TESTS = "tests";
     private static final Set<ParameterData.Kind> ARGUMENT_KINDS = Set.of(ParameterData.Kind.REQUIRED,
             ParameterData.Kind.DEFAULTABLE, ParameterData.Kind.INCLUDED_FIELD);
@@ -151,6 +157,30 @@ public class NewConnectionBuilder extends CallBuilder {
      * Replaces the literals among the connection's arguments with configurables, and returns those to declare.
      */
     private List<Configurable> useConfigurables(SourceBuilder sourceBuilder) {
+        return planConfigurables(sourceBuilder, false)
+                .map(ConnectionConfigurables::configurables)
+                .orElse(List.of());
+    }
+
+    /**
+     * The configurable each field of the connection's arguments would get on save, or why it can't get one, without
+     * changing the connection: what the connection form shows beside each field before the user saves.
+     *
+     * @param sourceBuilder the source builder of the connection's flow node
+     * @return each field a configurable can stand for, in argument order
+     */
+    public List<ConnectionConfigurables.Preview> previewConfigurables(SourceBuilder sourceBuilder) {
+        return planConfigurables(sourceBuilder, true)
+                .map(ConnectionConfigurables::previews)
+                .orElse(List.of());
+    }
+
+    /**
+     * Names the configurables of the connection's literals. Saving rewrites each argument in place; previewing leaves
+     * the arguments as they are. Each argument's property may carry what the user chose for its fields under the
+     * {@value #CONFIGURABLES_DATA_KEY} key of its codedata (see {@link ConnectionConfigurables.Choice#fromData}).
+     */
+    private Optional<ConnectionConfigurables> planConfigurables(SourceBuilder sourceBuilder, boolean preview) {
         Map<String, Property> properties = sourceBuilder.flowNode.properties();
         String connection = properties.get(Property.VARIABLE_KEY).value().toString();
         Optional<SemanticModel> semanticModel = sourceBuilder.workspaceManager.semanticModel(sourceBuilder.filePath);
@@ -159,7 +189,7 @@ public class NewConnectionBuilder extends CallBuilder {
                 sourceBuilder.lsClientLogger.logWarning("Connection '%s' keeps its literals; %s has no semantic model"
                         .formatted(connection, sourceBuilder.filePath));
             }
-            return List.of();
+            return Optional.empty();
         }
         SemanticModel model = semanticModel.get();
         Map<String, Symbol> moduleSymbols = model.moduleSymbols().stream()
@@ -167,7 +197,7 @@ public class NewConnectionBuilder extends CallBuilder {
                 .collect(Collectors.toMap(symbol -> symbol.getName().get(), symbol -> symbol,
                         (first, second) -> first));
         ConnectionConfigurables configurables = new ConnectionConfigurables(connection, moduleSymbols,
-                symbol -> !model.references(symbol, false).isEmpty());
+                symbol -> !model.references(symbol, false).isEmpty(), preview);
         Codedata codedata = sourceBuilder.flowNode.codedata();
         String connector = connectorId(codedata.org(), codedata.resolvePackageName(), codedata.module(),
                 codedata.object(), codedata.version());
@@ -183,7 +213,7 @@ public class NewConnectionBuilder extends CallBuilder {
                 sourceBuilder.lsClientLogger.logWarning("Connection '%s' keeps its literals; loading %s failed: %s"
                         .formatted(connection, connector, e));
             }
-            return List.of();
+            return Optional.empty();
         }
         for (ParameterData parameter : init.parameters().values()) {
             String key = FlowNodeUtil.getPropertyKey(ParamUtils.removeLeadingSingleQuote(parameter.name()));
@@ -193,10 +223,24 @@ public class NewConnectionBuilder extends CallBuilder {
                 continue;
             }
             String argument = configurables.rewrite(property.toSourceCode(), parameter.name(),
-                    parameter.typeSymbol(), parameter.kind() == ParameterData.Kind.INCLUDED_FIELD);
-            properties.put(key, AiUtils.createUpdatedProperty(property, argument));
+                    parameter.typeSymbol(), parameter.kind() == ParameterData.Kind.INCLUDED_FIELD,
+                    choicesOf(property));
+            if (!preview) {
+                properties.put(key, AiUtils.createUpdatedProperty(property, argument));
+            }
         }
-        return configurables.configurables();
+        return Optional.of(configurables);
+    }
+
+    /**
+     * What the user chose for the fields of an argument, carried in its property's codedata.
+     */
+    private static Map<String, ConnectionConfigurables.Choice> choicesOf(Property property) {
+        PropertyCodedata codedata = property.codedata();
+        if (codedata == null || codedata.data() == null) {
+            return Map.of();
+        }
+        return ConnectionConfigurables.Choice.fromData(codedata.data().get(CONFIGURABLES_DATA_KEY));
     }
 
     /**

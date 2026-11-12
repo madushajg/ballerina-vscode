@@ -922,6 +922,53 @@ export interface BISourceCodeRequest {
     artifactData?: ArtifactData;
 }
 
+/**
+ * A new connection, with what the user chose for its fields' configurables in each argument property's
+ * `codedata.data.configurables` (see `ConnectionConfigurableChoices`).
+ */
+export interface ConnectionConfigurablesRequest {
+    filePath: string;
+    flowNode: FlowNode;
+}
+
+/** A field of a new connection's argument that a configurable can stand for, as saving would name it. */
+export interface ConnectionConfigurablePreview {
+    /** The init parameter the argument is given for, such as `config`. */
+    parameter: string;
+    /** The field's path within the argument, such as `auth.token`, or "" for the argument itself. */
+    fieldPath: string;
+    /** The configurable's name: the one saving gives it, or would give it if the user kept the literal. */
+    name: string;
+    /** The configurable's type: string, int, float, decimal or boolean. */
+    type: string;
+    /** Whether the module already declares it, so saving reuses it. */
+    exists: boolean;
+    /** Whether the user chose to keep the literal in source. */
+    kept: boolean;
+    /** Why the field can't be given this configurable, if it can't. */
+    error?: string;
+}
+
+export interface ConnectionConfigurablesResponse {
+    configurables?: ConnectionConfigurablePreview[];
+    errorMsg?: string;
+}
+
+/** What the user chose for one field's configurable: a name of their own, or to keep the literal in source. */
+export interface ConnectionConfigurableChoice {
+    name?: string;
+    keep?: boolean;
+}
+
+/**
+ * The choices an argument property carries under `codedata.data[CONNECTION_CONFIGURABLES_DATA_KEY]`, by the
+ * field's path within the argument.
+ */
+export type ConnectionConfigurableChoices = Record<string, ConnectionConfigurableChoice>;
+
+/** The key of an argument property's `codedata.data` that carries its `ConnectionConfigurableChoices`. */
+export const CONNECTION_CONFIGURABLES_DATA_KEY = "configurables";
+
 export type BISourceCodeResponse = {
     textEdits?: {
         [key: string]: TextEdit[];
@@ -2413,6 +2460,7 @@ export interface BIInterface extends BaseLangClientInterface {
     getSTByRange: (params: BallerinaSTParams) => Promise<SyntaxTree | NOT_SUPPORTED_TYPE>;
     getFlowModel: (params: BIFlowModelRequest) => Promise<BIFlowModelResponse>;
     getSourceCode: (params: BISourceCodeRequest) => Promise<BISourceCodeResponse>;
+    getConnectionConfigurables: (params: ConnectionConfigurablesRequest) => Promise<ConnectionConfigurablesResponse>;
     getAvailableNodes: (params: BIAvailableNodesRequest) => Promise<BIAvailableNodesResponse>;
     getNodeTemplate: (params: BINodeTemplateRequest) => Promise<BINodeTemplateResponse>;
     getSequenceDiagramModel: (params: SequenceModelRequest) => Promise<SequenceModelResponse>;

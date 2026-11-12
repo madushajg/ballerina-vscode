@@ -44,6 +44,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -82,8 +83,13 @@ public class ConnectionConfigurables {
     private final String connection;
     private final Map<String, Symbol> moduleSymbols;
     private final Predicate<Symbol> referenced;
+    private final boolean preview;
     private final Set<String> usedNames = new HashSet<>();
     private final List<Configurable> configurables = new ArrayList<>();
+    private final List<Preview> previews = new ArrayList<>();
+    // The argument rewrite() is working on: its parameter, and what the user chose for its fields.
+    private String parameter = "";
+    private Map<String, Choice> choices = Map.of();
 
     /**
      * @param connection    the connection's name
@@ -92,9 +98,67 @@ public class ConnectionConfigurables {
      */
     public ConnectionConfigurables(String connection, Map<String, Symbol> moduleSymbols,
                                    Predicate<Symbol> referenced) {
+        this(connection, moduleSymbols, referenced, false);
+    }
+
+    /**
+     * @param connection    the connection's name
+     * @param moduleSymbols the module's symbols by name
+     * @param referenced    whether anything refers to a symbol
+     * @param preview       whether to report each field's configurable, or the reason it can't have one, instead of
+     *                      refusing the connection; see {@link #previews()}
+     */
+    public ConnectionConfigurables(String connection, Map<String, Symbol> moduleSymbols,
+                                   Predicate<Symbol> referenced, boolean preview) {
         this.connection = connection;
         this.moduleSymbols = moduleSymbols;
         this.referenced = referenced;
+        this.preview = preview;
+    }
+
+    /**
+     * What the user chose for one field of an argument in the connection form: to keep its literal in source, or the
+     * name its configurable takes in place of the generated one.
+     *
+     * @param name the configurable's name, or {@code null} for the generated one
+     * @param keep whether the literal stays in source
+     */
+    public record Choice(String name, boolean keep) {
+
+        /**
+         * The choices an argument's property carries in its codedata, keyed by the field's path within the argument
+         * ({@code auth.token}, or {@code ""} for the argument itself): {@code {"auth.token": {"name": "apiToken"}}}.
+         */
+        public static Map<String, Choice> fromData(Object data) {
+            if (!(data instanceof Map<?, ?> entries)) {
+                return Map.of();
+            }
+            Map<String, Choice> choices = new HashMap<>();
+            entries.forEach((path, value) -> {
+                if (path instanceof String fieldPath && value instanceof Map<?, ?> choice) {
+                    Object name = choice.get("name");
+                    choices.put(fieldPath, new Choice(name instanceof String text && !text.isBlank() ? text.strip()
+                            : null, Boolean.TRUE.equals(choice.get("keep"))));
+                }
+            });
+            return choices;
+        }
+    }
+
+    /**
+     * A field of an argument that a configurable can stand for, as the connection form shows it before the
+     * connection is saved.
+     *
+     * @param parameter the parameter the argument is given for
+     * @param fieldPath the field's path within the argument, or {@code ""} for the argument itself
+     * @param name      the configurable's name: the one saving gives it, or would give it if the field kept no literal
+     * @param type      the configurable's type
+     * @param exists    whether the module already declares it
+     * @param kept      whether the user chose to keep the literal
+     * @param error     why the field can't be given this configurable, or {@code null}
+     */
+    public record Preview(String parameter, String fieldPath, String name, String type, boolean exists,
+                          boolean kept, String error) {
     }
 
     /**
@@ -127,6 +191,29 @@ public class ConnectionConfigurables {
     }
 
     /**
+     * Each field the arguments rewritten so far could configure, in order; collected only when previewing.
+     */
+    public List<Preview> previews() {
+        return previews;
+    }
+
+    /**
+     * {@link #rewrite(String, String, TypeSymbol, boolean)} with the user's choices for the argument's fields.
+     *
+     * @param choices what the user chose, by the field's path within the argument
+     */
+    public String rewrite(String argument, String parameter, TypeSymbol type, boolean included,
+                          Map<String, Choice> choices) {
+        this.parameter = parameter;
+        this.choices = choices;
+        try {
+            return rewrite(argument, parameter, type, included);
+        } finally {
+            this.choices = Map.of();
+        }
+    }
+
+    /**
      * Returns the argument with each literal of a simple-typed field replaced by its configurable. The fields of a
      * record argument are named after the connection alone, or after the parameter too where that name is taken by
      * another of the connection's fields; a field of an included record, or any other argument, is named after the
@@ -141,12 +228,13 @@ public class ConnectionConfigurables {
      *                             another of the connection's fields
      */
     public String rewrite(String argument, String parameter, TypeSymbol type, boolean included) {
+        this.parameter = parameter;
         ExpressionNode value = NodeParser.parseExpression(argument);
         String named = fieldName(connection, parameter);
         List<String> prefixes = value instanceof MappingConstructorExpressionNode && !included
                 ? List.of(connection, named) : List.of(named);
         List<Replacement> replacements = new ArrayList<>();
-        collect(value, type, prefixes, "", replacements);
+        collect(value, type, prefixes, "", "", replacements);
         StringBuilder source = new StringBuilder(argument);
         replacements.stream()
                 .sorted(Comparator.comparingInt((Replacement r) -> r.range().startOffset()).reversed())
@@ -167,7 +255,7 @@ public class ConnectionConfigurables {
                 .collect(Collectors.joining());
     }
 
-    private void collect(ExpressionNode value, TypeSymbol type, List<String> prefixes, String suffix,
+    private void collect(ExpressionNode value, TypeSymbol type, List<String> prefixes, String suffix, String path,
                          List<Replacement> replacements) {
         TypeSymbol rawType = CommonUtils.getRawType(type);
         if (value instanceof BasicLiteralNode literal) {
@@ -176,25 +264,60 @@ public class ConnectionConfigurables {
             if (kind.isEmpty() || isEmptyString(token) || hasNoTomlForm(token, kind.get())) {
                 return;
             }
-            String name = prefixes.stream().map(prefix -> prefix + suffix)
-                    .filter(candidate -> !usedNames.contains(valueOf(candidate)))
-                    .findFirst()
-                    .orElseThrow(() -> new UserFacingException(("Two of this connection's fields would both be "
-                            + "configured by '%s'.").formatted(valueOf(prefixes.getLast() + suffix))));
-            Symbol existing = moduleSymbols.get(valueOf(name));
-            if (existing != null && !isConfigurableOf(existing, kind.get())) {
-                throw new UserFacingException("'%s' is already used in this module. Choose another connection name."
-                        .formatted(valueOf(name)));
+            String configType = CONFIGURABLE_TYPES.get(kind.get());
+            Choice choice = choices.get(path);
+            if (choice != null && choice.keep()) {
+                if (preview) {
+                    // Shown so the user sees the name the field gets if they change their mind; it takes no name.
+                    String candidate = choice.name() != null ? choice.name()
+                            : prefixes.stream().map(prefix -> prefix + suffix)
+                            .filter(name -> !usedNames.contains(valueOf(name)))
+                            .findFirst().orElse(prefixes.getLast() + suffix);
+                    previews.add(new Preview(parameter, path, valueOf(candidate), configType, false, true, null));
+                }
+                return;
             }
-            if (existing != null && referenced.test(existing)) {
-                name = distinctName(name, kind.get());
+            String name;
+            Symbol existing;
+            if (choice != null && choice.name() != null) {
+                String problem = chosenNameProblem(choice.name(), kind.get());
+                if (problem != null) {
+                    refuse(path, choice.name(), configType, problem);
+                    return;
+                }
+                name = choice.name();
+                existing = moduleSymbols.get(name);
+            } else {
+                Optional<String> free = prefixes.stream().map(prefix -> prefix + suffix)
+                        .filter(candidate -> !usedNames.contains(valueOf(candidate)))
+                        .findFirst();
+                if (free.isEmpty()) {
+                    String taken = valueOf(prefixes.getLast() + suffix);
+                    refuse(path, taken, configType,
+                            "Two of this connection's fields would both be configured by '%s'.".formatted(taken));
+                    return;
+                }
+                name = free.get();
                 existing = moduleSymbols.get(valueOf(name));
+                if (existing != null && !isConfigurableOf(existing, kind.get())) {
+                    refuse(path, valueOf(name), configType,
+                            "'%s' is already used in this module. Choose another connection name."
+                                    .formatted(valueOf(name)));
+                    return;
+                }
+                if (existing != null && referenced.test(existing)) {
+                    name = distinctName(name, kind.get());
+                    existing = moduleSymbols.get(valueOf(name));
+                }
             }
             name = sourceName(name);
             usedNames.add(valueOf(name));
             replacements.add(new Replacement(literal.literalToken().textRange(), name));
-            configurables.add(new Configurable(name, valueOf(name), CONFIGURABLE_TYPES.get(kind.get()),
-                    literal.toSourceCode().strip(), existing != null));
+            configurables.add(new Configurable(name, valueOf(name), configType, literal.toSourceCode().strip(),
+                    existing != null));
+            if (preview) {
+                previews.add(new Preview(parameter, path, valueOf(name), configType, existing != null, false, null));
+            }
         } else if (value instanceof MappingConstructorExpressionNode mapping) {
             recordOf(rawType, mapping).ifPresent(record -> mapping.fields().forEach(field -> {
                 if (!(field instanceof SpecificFieldNode specificField) || specificField.valueExpr().isEmpty()) {
@@ -204,10 +327,43 @@ public class ConnectionConfigurables {
                 RecordFieldSymbol fieldSymbol = record.fieldDescriptors().get(fieldName);
                 if (fieldSymbol != null) {
                     collect(specificField.valueExpr().get(), fieldSymbol.typeDescriptor(), prefixes,
-                            suffix + fieldSuffix(fieldName), replacements);
+                            suffix + fieldSuffix(fieldName), path.isEmpty() ? fieldName : path + "." + fieldName,
+                            replacements);
                 }
             }));
         }
+    }
+
+    /**
+     * Why a name the user gave a field's configurable can't be used, or {@code null} if it can. Unlike a generated
+     * name it is never numbered: the user chose it, so a clash is theirs to resolve.
+     */
+    private String chosenNameProblem(String name, TypeDescKind kind) {
+        if (!PLAIN_IDENTIFIER.matcher(name).matches()) {
+            return "'%s' is not a valid name. Use letters, digits and _, and don't start with a digit."
+                    .formatted(name);
+        }
+        if (name.equals(valueOf(connection))) {
+            return "'%s' is the connection's own name. Choose another name.".formatted(name);
+        }
+        if (usedNames.contains(name)) {
+            return "Two of this connection's fields would both be configured by '%s'.".formatted(name);
+        }
+        Symbol existing = moduleSymbols.get(name);
+        if (existing != null && (!isConfigurableOf(existing, kind) || referenced.test(existing))) {
+            return "'%s' is already used in this module. Choose another name.".formatted(name);
+        }
+        return null;
+    }
+
+    /**
+     * Refuses the connection over a field's configurable, or, when previewing, reports why and leaves the literal.
+     */
+    private void refuse(String path, String name, String type, String message) {
+        if (!preview) {
+            throw new UserFacingException(message);
+        }
+        previews.add(new Preview(parameter, path, name, type, false, false, message));
     }
 
     /**
