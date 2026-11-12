@@ -45,6 +45,9 @@ import {
     getPrimaryInputType,
     functionKinds,
     NodeProperties,
+    NodePropertyKey,
+    ConnectionConfigurableChoices,
+    CONNECTION_CONFIGURABLES_DATA_KEY,
     DiagnosticMessage,
     AvailableNode,
     ParentPopupData,
@@ -122,7 +125,7 @@ import { EXPRESSION_EXTRACTION_REGEX, TypeHelperContext } from "../../../../cons
 import MatchForm from "../MatchForm";
 import { FormSubmitOptions } from "../../FlowDiagram";
 import { AI_PROMPT_TYPE, getHelperPaneNew } from "../../HelperPaneNew";
-import { ConfigureRecordPage } from "../../HelperPaneNew/Views/RecordConfigModal";
+import { ConfigureRecordPage, RecordConfigurablesSupport } from "../../HelperPaneNew/Views/RecordConfigModal";
 import { VariableForm } from "../DeclareVariableForm";
 import KnowledgeBaseForm from "../KnowledgeBaseForm";
 import SendEventForm from "../SendEventForm";
@@ -958,8 +961,15 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
         }
     }, [baseFields, fileName, node?.codedata, rpcClient, targetLineRange]);
 
+    // A new connection: whether it is one, the form's values as last typed (so a preview sees the connection name),
+    // and what the user chose for the configurables of each record field, by field key.
+    const isNewConnection = node?.codedata?.node === "NEW_CONNECTION" && node?.codedata?.isNew === true;
+    const latestFormValuesRef = useRef<FormValues | undefined>(undefined);
+    const configurableChoicesRef = useRef<Record<string, ConnectionConfigurableChoices>>({});
+
     const handleFormChange = useCallback(
         (fieldKey: string, value: any, allValues: FormValues) => {
+            latestFormValuesRef.current = allValues;
             setFormDiagnostics(prev => prev.length > 0 ? [] : prev);
             void retypeDependentFields(fieldKey, value);
             onChange?.(fieldKey, value, allValues);
@@ -997,7 +1007,52 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
         const nodeWithUpdatedProps = updateNodeWithProperties(clonedNode, updatedNode, processedData, formImportsRef.current, dirtyFields);
 
         // check all nodes and remove empty nodes
-        return removeEmptyNodes(nodeWithUpdatedProps);
+        return withConfigurableChoices(removeEmptyNodes(nodeWithUpdatedProps));
+    };
+
+    /**
+     * A new connection carries what the user chose for each record field's configurables in that property's
+     * codedata, which is where the language server reads them when it saves the connection.
+     */
+    const withConfigurableChoices = (flowNode: FlowNode, overrides?: Record<string, ConnectionConfigurableChoices>): FlowNode => {
+        const choicesByKey = { ...configurableChoicesRef.current, ...overrides };
+        if (!isNewConnection || !flowNode?.properties || Object.keys(choicesByKey).length === 0) {
+            return flowNode;
+        }
+        const properties = { ...flowNode.properties } as NodeProperties;
+        Object.entries(choicesByKey).forEach(([key, choices]) => {
+            const property = properties[key as NodePropertyKey];
+            if (!property) {
+                return;
+            }
+            properties[key as NodePropertyKey] = {
+                ...property,
+                codedata: {
+                    ...property.codedata,
+                    data: { ...property.codedata?.data, [CONNECTION_CONFIGURABLES_DATA_KEY]: choices as any }
+                }
+            };
+        });
+        return { ...flowNode, properties };
+    };
+
+    /** Lets the record editor of a new connection's field make its values configurable; nothing for other forms. */
+    const recordConfigurablesFor = (fieldKey: string): RecordConfigurablesSupport | undefined => {
+        if (!isNewConnection) {
+            return undefined;
+        }
+        return {
+            initialChoices: configurableChoicesRef.current[fieldKey] ?? {},
+            onChoicesChange: (choices) => {
+                configurableChoicesRef.current = { ...configurableChoicesRef.current, [fieldKey]: choices };
+            },
+            preview: async (recordValue, choices) => {
+                const values = { ...(latestFormValuesRef.current ?? {}), [fieldKey]: recordValue };
+                const flowNode = withConfigurableChoices(
+                    mergeFormDataWithFlowNode(values, targetLineRange), { [fieldKey]: choices });
+                return rpcClient.getBIDiagramRpcClient().getConnectionConfigurables({ filePath: fileName, flowNode });
+            }
+        };
     };
 
     const handleOpenView = async (location: VisualizerLocation) => {
@@ -2255,6 +2310,7 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
                                 getHelperPane={handleGetHelperPane}
                                 field={fields.find(f => f.key === recordConfigPageState.fieldKey)}
                                 triggerCharacters={TRIGGER_CHARACTERS}
+                                configurables={recordConfigurablesFor(recordConfigPageState.fieldKey)}
                                 formContext={{
                                     expressionEditor: expressionEditor,
                                     popupManager: popupManager,
@@ -2454,6 +2510,7 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
                             getHelperPane={handleGetHelperPane}
                             field={fields.find(f => f.key === recordConfigPageState.fieldKey)}
                             triggerCharacters={TRIGGER_CHARACTERS}
+                            configurables={recordConfigurablesFor(recordConfigPageState.fieldKey)}
                             formContext={{
                                 expressionEditor: expressionEditor,
                                 popupManager: popupManager,

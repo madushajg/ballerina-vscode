@@ -23,7 +23,23 @@ import { useEffect, useMemo, useReducer, useRef, useState, RefObject } from "rea
 import { useRpcContext } from "@wso2/ballerina-rpc-client";
 import { RecordConfigView } from "./RecordConfigView";
 import { ChipExpressionEditorComponent, Context as FormContext, HelperpaneOnChangeOptions, FieldProvider, FormField, FormExpressionEditorProps, getPropertyFromFormField, RecordConfigExpressionEditorConfig, ExpandedEditor, InputMode, ModeToggle } from "@wso2/ballerina-side-panel";
-import { RecordFormView, ExpressionEditorArgs } from "../Components/RecordFormView";
+import { RecordFormView, ExpressionEditorArgs, FieldFooterArgs } from "../Components/RecordFormView";
+import { ConfigurableLine } from "../Components/RecordFormView/ConfigurableLine";
+import { choicesToSend, isConfigurable, isValidConfigurableName } from "../Components/RecordFormView/configurables";
+import type { ConnectionConfigurableChoices, ConnectionConfigurablePreview, ConnectionConfigurablesResponse } from "@wso2/ballerina-core";
+
+/**
+ * Lets a new connection's record field make its simple values configurable. The connection form supplies it; the
+ * names come from the language server, which saves the connection with them.
+ */
+export interface RecordConfigurablesSupport {
+    /** What the user chose for this field earlier, by field path. */
+    initialChoices: ConnectionConfigurableChoices;
+    /** The configurables saving would create for the record's current value and the user's choices. */
+    preview: (recordValue: string, choices: ConnectionConfigurableChoices) => Promise<ConnectionConfigurablesResponse>;
+    /** The choices to save the connection with, whenever they change. */
+    onChoicesChange: (choices: ConnectionConfigurableChoices) => void;
+}
 import { PromptFieldEditorContext } from "../Components/RecordConstructView/PromptFieldEditorContext";
 import { useForm } from "react-hook-form";
 import { debounce } from "lodash";
@@ -54,6 +70,8 @@ type ConfigureRecordPageProps = {
     ) => React.ReactNode;
     field?: FormField;
     triggerCharacters: readonly string[];
+    /** Present only for a new connection's record field, whose simple values can be made configurable. */
+    configurables?: RecordConfigurablesSupport;
     formContext: {
         expressionEditor: FormExpressionEditorProps;
         popupManager: {
@@ -250,7 +268,7 @@ function FieldExpressionEditor(props: FieldExpressionEditorProps) {
 }
 
 export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
-    const { fileName, onChange, currentValue, recordTypeField, onClose, targetLineRange, getHelperPane, field, triggerCharacters, formContext } = props;
+    const { fileName, onChange, currentValue, recordTypeField, onClose, targetLineRange, getHelperPane, field, triggerCharacters, formContext, configurables } = props;
     const { rpcClient } = useRpcContext();
 
     const [recordModel, setRecordModel] = useState<TypeField[]>([]);
@@ -279,7 +297,36 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
     // The form is the default view; the code view is today's editor.
     const [recordView, setRecordView] = useState<RecordView>("form");
     // Redraws the form and the tree after the form changes the model's shape (fields, items, choices).
-    const [, redrawModel] = useReducer((count: number) => count + 1, 0);
+    const [modelRevision, redrawModel] = useReducer((count: number) => count + 1, 0);
+
+    // A new connection's configurables. What the user chose (by field path) and any rename in progress live here,
+    // not in the form's fields, so both survive switching to the code view and back.
+    const [configurableChoices, setConfigurableChoices] = useState<ConnectionConfigurableChoices>(
+        () => configurables?.initialChoices ?? {});
+    const [configurablePreviews, setConfigurablePreviews] = useState<Record<string, ConnectionConfigurablePreview>>({});
+    const [renaming, setRenaming] = useState<{ path: string; draft: string } | null>(null);
+    const previewRequestIdRef = useRef(0);
+    const configurablesRef = useRef(configurables);
+    configurablesRef.current = configurables;
+    const debouncedPreviewConfigurables = useRef(
+        debounce(async (recordValue: string, choices: ConnectionConfigurableChoices, parameter: string) => {
+            const support = configurablesRef.current;
+            if (!support) {
+                return;
+            }
+            const requestId = ++previewRequestIdRef.current;
+            const response = await support.preview(recordValue, choices);
+            if (requestId !== previewRequestIdRef.current) {
+                return;
+            }
+            // The preview covers every argument of the connection; this modal edits one of them.
+            const byPath: Record<string, ConnectionConfigurablePreview> = {};
+            (response?.configurables ?? [])
+                .filter((preview) => preview.parameter.replace(/^'/, "") === parameter)
+                .forEach((preview) => { byPath[preview.fieldPath] = preview; });
+            setConfigurablePreviews(byPath);
+        }, 400)
+    ).current;
     // A new key whenever the model is replaced (loaded, re-parsed from code, member switched), so the
     // form's inputs start from the new model rather than keep what they last showed.
     const formRevision = useRef(0);
@@ -684,6 +731,71 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         handleModelChange(updatedModel);
     };
 
+    // A new connection: tell the connection form what to save with, and ask the language server for the names.
+    useEffect(() => {
+        const record = recordModelRef.current[0];
+        if (!configurables || !record) {
+            return;
+        }
+        const send = choicesToSend(record, configurableChoices);
+        configurables.onChoicesChange(send);
+        debouncedPreviewConfigurables(localExpressionValue, send, field?.key ?? recordTypeField.key);
+    }, [configurableChoices, localExpressionValue, modelRevision, recordModel]);
+
+    useEffect(() => () => debouncedPreviewConfigurables.cancel(), []);
+
+    const setConfigurableChoice = (path: string, choice: { keep?: boolean; name?: string }) => {
+        setConfigurableChoices((previous) => ({ ...previous, [path]: { ...previous[path], ...choice } }));
+    };
+
+    /** Applies a rename in progress. A name that is not an identifier stays in the box to be fixed. */
+    const commitRename = (): boolean => {
+        if (!renaming) {
+            return true;
+        }
+        const name = renaming.draft.trim();
+        if (!isValidConfigurableName(name)) {
+            return false;
+        }
+        // Renaming back to the generated name is the same as not renaming.
+        const generated = configurablePreviews[renaming.path];
+        const isGenerated = generated && !configurableChoices[renaming.path]?.name && generated.name === name;
+        setConfigurableChoice(renaming.path, { name: isGenerated ? undefined : name });
+        setRenaming(null);
+        return true;
+    };
+
+    const renderConfigurableLine = (args: FieldFooterArgs) => {
+        // Only a literal can become a configurable, and the language server doesn't look inside a list.
+        if (args.isExpression || args.path.includes("[")) {
+            return null;
+        }
+        const choice = configurableChoices[args.path];
+        const on = isConfigurable(args.field, choice);
+        const preview = configurablePreviews[args.path];
+        const editing = renaming?.path === args.path;
+        return (
+            <ConfigurableLine
+                path={args.path}
+                on={on}
+                name={choice?.name ?? preview?.name}
+                error={preview?.error}
+                editing={editing}
+                draft={editing ? renaming.draft : undefined}
+                onToggle={(next) => {
+                    setConfigurableChoice(args.path, { keep: !next });
+                    if (!next && editing) {
+                        setRenaming(null);
+                    }
+                }}
+                onStartRename={() => setRenaming({ path: args.path, draft: choice?.name ?? preview?.name ?? "" })}
+                onDraftChange={(draft) => setRenaming({ path: args.path, draft })}
+                onCommit={commitRename}
+                onCancel={() => setRenaming(null)}
+            />
+        );
+    };
+
     const switchRecordView = (view: RecordView) => {
         if (view === recordView) {
             return;
@@ -691,6 +803,8 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         if (view === "code") {
             // Write what was typed in the form before the code view shows the source.
             debouncedFormValueChange.flush();
+            // A valid rename in progress is applied; an invalid one waits in its box for the user to come back.
+            commitRename();
         } else {
             // Bring code typed in the code view into the model before the form shows it.
             debouncedSyncExpressionToModel.flush();
@@ -983,6 +1097,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                                                     getHelperPane={getHelperPane}
                                                 />
                                             )}
+                                            renderFieldFooter={configurables ? renderConfigurableLine : undefined}
                                         />
                                     ) : !isLoading ? (
                                         <NotAFormMessage data-testid="record-form-unavailable">
