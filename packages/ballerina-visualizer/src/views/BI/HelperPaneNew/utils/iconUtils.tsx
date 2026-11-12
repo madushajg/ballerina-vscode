@@ -32,7 +32,7 @@ const ICON_NAME_MAP: Record<HelperPaneIconType, string> = {
     [HelperPaneIconType.VARIABLE]: "bi-variable",
     [HelperPaneIconType.FUNCTION]: "bi-function",
     [HelperPaneIconType.INPUT]: "bi-input",
-    [HelperPaneIconType.CONFIGURABLE]: "bi-settings",
+    [HelperPaneIconType.CONFIGURABLE]: "configurable-icon",
     [HelperPaneIconType.VALUE]: "bi-code",
     [HelperPaneIconType.DOCUMENT]: "bi-attach-file",
 };
