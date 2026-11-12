@@ -19,10 +19,11 @@
 import { AvailableNode, CodeData, GetRecordConfigResponse, GetRecordConfigRequest, LineRange, RecordTypeField, TypeField, RecordSourceGenRequest, RecordSourceGenResponse, GetRecordModelFromSourceRequest, GetRecordModelFromSourceResponse, ExpressionProperty, NodeKind, getPrimaryInputType, getSecondaryInputType, InputType } from "@wso2/ballerina-core";
 import { Dropdown, HelperPane, Typography, HelperPaneHeight, FormExpressionEditorRef, ErrorBanner, ProgressRing, ThemeColors } from "@wso2/ui-toolkit";
 import styled from "@emotion/styled";
-import { useEffect, useRef, useState, RefObject } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, RefObject } from "react";
 import { useRpcContext } from "@wso2/ballerina-rpc-client";
 import { RecordConfigView } from "./RecordConfigView";
-import { ChipExpressionEditorComponent, Context as FormContext, HelperpaneOnChangeOptions, FieldProvider, FormField, FormExpressionEditorProps, getPropertyFromFormField, RecordConfigExpressionEditorConfig, ExpandedEditor, InputMode } from "@wso2/ballerina-side-panel";
+import { ChipExpressionEditorComponent, Context as FormContext, HelperpaneOnChangeOptions, FieldProvider, FormField, FormExpressionEditorProps, getPropertyFromFormField, RecordConfigExpressionEditorConfig, ExpandedEditor, InputMode, ModeToggle } from "@wso2/ballerina-side-panel";
+import { RecordFormView, ExpressionEditorArgs } from "../Components/RecordFormView";
 import { PromptFieldEditorContext } from "../Components/RecordConstructView/PromptFieldEditorContext";
 import { useForm } from "react-hook-form";
 import { debounce } from "lodash";
@@ -146,6 +147,108 @@ export const ExpressionEditorDocumentation = styled.div({
     }
 });
 
+export const RightColumnHeader = styled.div({
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    marginBottom: '8px'
+});
+
+export const FormContainer = styled.div({
+    flex: '1',
+    minHeight: 0,
+    overflowY: 'auto',
+    paddingRight: '4px'
+});
+
+export const NotAFormMessage = styled.div({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '24px 12px',
+    textAlign: 'center',
+    color: ThemeColors.ON_SURFACE_VARIANT,
+    border: `1px dashed ${ThemeColors.OUTLINE_VARIANT}`,
+    borderRadius: '4px'
+});
+
+export const SwitchToCodeButton = styled.button({
+    padding: 0,
+    border: 0,
+    background: 'transparent',
+    color: 'var(--vscode-textLink-foreground)',
+    cursor: 'pointer',
+    font: 'inherit'
+});
+
+/** How the right side of the modal shows the record: as a form of its fields, or as source. */
+type RecordView = "form" | "code";
+
+type FieldExpressionEditorProps = {
+    args: ExpressionEditorArgs;
+    fileName: string;
+    targetLineRange?: LineRange;
+    triggerCharacters: readonly string[];
+    expressionEditor: FormExpressionEditorProps;
+    getHelperPane: ConfigureRecordPageProps["getHelperPane"];
+};
+
+/** The expression editor of one field of the form, the same chip editor the code view and the side panel use. */
+function FieldExpressionEditor(props: FieldExpressionEditorProps) {
+    const { args, fileName, targetLineRange, triggerCharacters, expressionEditor, getHelperPane } = props;
+    const exprRef = useRef<FormExpressionEditorRef>(null);
+    const anchorRef = useRef<HTMLDivElement>(null);
+    // The editor is controlled; the form writes the model without redrawing on every keystroke.
+    const [value, setValue] = useState<string>(args.value);
+
+    const fieldDefinition: FormField = {
+        key: args.id,
+        label: args.field.name || args.id,
+        type: "EXPRESSION",
+        value,
+        optional: true,
+        editable: true,
+        documentation: "",
+        enabled: true,
+        types: []
+    };
+
+    const handleChange = (updatedValue: string, cursorPosition: number) => {
+        setValue(updatedValue);
+        args.onChange(updatedValue);
+        expressionEditor.retrieveCompletions?.(
+            updatedValue,
+            getPropertyFromFormField({ ...fieldDefinition, value: updatedValue }),
+            cursorPosition
+        );
+    };
+
+    const fieldHelperPane = getHelperPane
+        ? (current: string, onChange: (value: string, options?: HelperpaneOnChangeOptions) => void, helperPaneHeight: HelperPaneHeight) =>
+            getHelperPane(args.id, exprRef, anchorRef, "", current, onChange, () => { }, helperPaneHeight)
+        : undefined;
+
+    return (
+        <FieldProvider initialField={fieldDefinition} triggerCharacters={triggerCharacters}>
+            <div ref={anchorRef} style={{ minWidth: 0 }}>
+                <ChipExpressionEditorComponent
+                    completions={expressionEditor.completions}
+                    onChange={handleChange}
+                    value={value}
+                    fileName={fileName}
+                    targetLineRange={targetLineRange}
+                    getHelperPane={fieldHelperPane}
+                    configuration={new ChipExpressionEditorDefaultConfiguration()}
+                    isExpandedVersion={false}
+                    hideFxButton={true}
+                    containerRef={anchorRef}
+                />
+            </div>
+        </FieldProvider>
+    );
+}
+
 export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
     const { fileName, onChange, currentValue, recordTypeField, onClose, targetLineRange, getHelperPane, field, triggerCharacters, formContext } = props;
     const { rpcClient } = useRpcContext();
@@ -172,6 +275,21 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
     const [formDiagnostics, setFormDiagnostics] = useState<any[]>(field?.diagnostics || []);
 
     const [promptEditTarget, setPromptEditTarget] = useState<{ param: TypeField; onChange: () => void } | null>(null);
+
+    // The form is the default view; the code view is today's editor.
+    const [recordView, setRecordView] = useState<RecordView>("form");
+    // Redraws the form and the tree after the form changes the model's shape (fields, items, choices).
+    const [, redrawModel] = useReducer((count: number) => count + 1, 0);
+    // A new key whenever the model is replaced (loaded, re-parsed from code, member switched), so the
+    // form's inputs start from the new model rather than keep what they last showed.
+    const formRevision = useRef(0);
+    const formKey = useMemo(() => ++formRevision.current, [recordModel]);
+    // handleModelChange is declared below; the debounced call reaches the latest one through this ref.
+    const handleModelChangeRef = useRef<(model: TypeField[]) => Promise<void>>(async () => { });
+    // A value typed in the form regenerates the source once typing pauses, as the code view's sync does.
+    const debouncedFormValueChange = useRef(
+        debounce(() => { handleModelChangeRef.current(recordModelRef.current); }, 300)
+    ).current;
 
     const isWrappedPrompt = (value: string) =>
         value.length >= 2 && value.startsWith("`") && value.endsWith("`");
@@ -551,6 +669,35 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         }
     }
 
+    handleModelChangeRef.current = handleModelChange;
+
+    // The form changed the model's shape: redraw the tree and the form, and regenerate the source now.
+    const handleFormStructureChange = () => {
+        debouncedFormValueChange.cancel();
+        redrawModel();
+        handleModelChange(recordModelRef.current);
+    };
+
+    // The tree changed which fields are checked: the form shows the checked ones, so it redraws too.
+    const handleTreeModelChange = (updatedModel: TypeField[]) => {
+        redrawModel();
+        handleModelChange(updatedModel);
+    };
+
+    const switchRecordView = (view: RecordView) => {
+        if (view === recordView) {
+            return;
+        }
+        if (view === "code") {
+            // Write what was typed in the form before the code view shows the source.
+            debouncedFormValueChange.flush();
+        } else {
+            // Bring code typed in the code view into the model before the form shows it.
+            debouncedSyncExpressionToModel.flush();
+        }
+        setRecordView(view);
+    };
+
     // Debounced function to fetch diagnostics
     const fetchDiagnostics = useRef(
         debounce(async (value: string) => {
@@ -789,7 +936,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                             >
                                 <RecordConfigView
                                     recordModel={recordModel}
-                                    onModelChange={handleModelChange}
+                                    onModelChange={handleTreeModelChange}
                                 />
                             </PromptFieldEditorContext.Provider>
                         ) : !isLoading ? (
@@ -798,16 +945,58 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                     </LeftColumn>
                     <RightColumn>
                         <ExpressionEditorContainer ref={modalContainerRef}>
-                            <div>
-                                <ExpressionEditorLabel>
-                                    {field?.label || "Expression"}
-                                </ExpressionEditorLabel>
-                                {field?.documentation && (
-                                    <ExpressionEditorDocumentation>
-                                        <ReactMarkdown>{field.documentation}</ReactMarkdown>
-                                    </ExpressionEditorDocumentation>
-                                )}
-                            </div>
+                            <RightColumnHeader>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <ExpressionEditorLabel>
+                                        {field?.label || "Expression"}
+                                    </ExpressionEditorLabel>
+                                    {field?.documentation && (
+                                        <ExpressionEditorDocumentation>
+                                            <ReactMarkdown>{field.documentation}</ReactMarkdown>
+                                        </ExpressionEditorDocumentation>
+                                    )}
+                                </div>
+                                <ModeToggle
+                                    primaryLabel="Form"
+                                    secondaryLabel="Code"
+                                    secondary={recordView === "code"}
+                                    onChange={(code) => switchRecordView(code ? "code" : "form")}
+                                    testId="record-view-switch"
+                                />
+                            </RightColumnHeader>
+                            {recordView === "form" ? (
+                                <FormContainer>
+                                    {recordModel[0] && !hasTooManyFieldsError ? (
+                                        <RecordFormView
+                                            key={formKey}
+                                            record={recordModel[0]}
+                                            onValueChange={debouncedFormValueChange}
+                                            onStructureChange={handleFormStructureChange}
+                                            renderExpressionEditor={(args) => (
+                                                <FieldExpressionEditor
+                                                    key={args.id}
+                                                    args={args}
+                                                    fileName={fileName}
+                                                    targetLineRange={targetLineRange}
+                                                    triggerCharacters={triggerCharacters}
+                                                    expressionEditor={formContext.expressionEditor}
+                                                    getHelperPane={getHelperPane}
+                                                />
+                                            )}
+                                        />
+                                    ) : !isLoading ? (
+                                        <NotAFormMessage data-testid="record-form-unavailable">
+                                            <span>This value can't be shown as a form.</span>
+                                            <SwitchToCodeButton type="button" onClick={() => switchRecordView("code")}>
+                                                Switch to Code
+                                            </SwitchToCodeButton>
+                                        </NotAFormMessage>
+                                    ) : null}
+                                    {formDiagnostics && formDiagnostics.length > 0 && (
+                                        <ErrorBanner errorMsg={formDiagnostics.map((d: any) => d.message).join(', ')} />
+                                    )}
+                                </FormContainer>
+                            ) : (
                             <FieldProvider
                                     initialField={field ? {
                                         ...field,
@@ -858,6 +1047,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                                         )}
                                     </div>
                             </FieldProvider>
+                            )}
                         </ExpressionEditorContainer>
                     </RightColumn>
                 </TwoColumnLayout>
