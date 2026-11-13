@@ -22,6 +22,7 @@ import io.ballerina.flowmodelgenerator.core.UserFacingException;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The configurables a new connection's literals get when it is saved, as the connection form shows them.
@@ -33,6 +34,7 @@ public class ConnectionConfigurablesResponse extends AbstractFlowModelResponse {
     private static final String GENERIC_ERROR_MSG = "the configurable names could not be worked out.";
 
     private List<ConnectionConfigurables.Preview> configurables = List.of();
+    private Map<String, String> arguments = Map.of();
 
     @Override
     public void setError(Throwable e) {
@@ -49,5 +51,16 @@ public class ConnectionConfigurablesResponse extends AbstractFlowModelResponse {
 
     public List<ConnectionConfigurables.Preview> configurables() {
         return configurables;
+    }
+
+    /**
+     * Each argument as saving would write it, by its property's key.
+     */
+    public void setArguments(Map<String, String> arguments) {
+        this.arguments = arguments;
+    }
+
+    public Map<String, String> arguments() {
+        return arguments;
     }
 }

@@ -27,7 +27,8 @@ jest.mock("@wso2/ui-toolkit", () => ({
     __esModule: true,
     Codicon: ({ name }: any) => <i data-codicon={name} />,
     Icon: ({ name }: any) => <i data-icon={name} />,
-    Tooltip: ({ content, children }: any) => <span data-testid="tooltip" title={content}>{children}</span>,
+    Tooltip: ({ content, children }: any) => <span data-testid="tooltip" data-content={content?.props?.children}>{children}</span>,
+    Typography: ({ children }: any) => <span>{children}</span>,
     ThemeColors: new Proxy({}, { get: () => "#000" }),
 }));
 
@@ -79,7 +80,7 @@ describe("ConfigurableLine", () => {
     it("says what it does, checked or not, and explains it on hover", () => {
         render({ on: false });
         expect(container.textContent).toContain("Make configurable");
-        expect(byTestId("tooltip")?.getAttribute("title")).toBe(CONFIGURABLE_HELP);
+        expect(byTestId("tooltip")?.getAttribute("data-content")).toBe(CONFIGURABLE_HELP);
         expect(container.querySelector("[data-icon='configurable-icon']")).not.toBeNull();
     });
 
@@ -98,6 +99,20 @@ describe("ConfigurableLine", () => {
         const checkbox = byTestId("record-form-configurable-toggle-baseUrl") as HTMLInputElement;
         act(() => { checkbox.click(); });
         expect(handlers.onToggle).toHaveBeenCalledWith(false);
+    });
+
+    it("offers the whole name when a long one is cut short", () => {
+        render({ on: true, name: "businessClient1SecureSocketKeyPassword" });
+        expect(byTestId("record-form-configurable-name-baseUrl")?.getAttribute("title"))
+            .toBe("businessClient1SecureSocketKeyPassword");
+    });
+
+    it("ignores a change that only reports what it already shows", () => {
+        // vscode-checkbox reports a change when React sets `checked` too; that is not the user toggling it.
+        render({ on: true, name: "mySalesforceBaseUrl" });
+        const checkbox = byTestId("record-form-configurable-toggle-baseUrl") as HTMLInputElement;
+        act(() => { checkbox.dispatchEvent(new Event("change", { bubbles: true })); });
+        expect(handlers.onToggle).not.toHaveBeenCalled();
     });
 
     it("starts a rename from the name", () => {

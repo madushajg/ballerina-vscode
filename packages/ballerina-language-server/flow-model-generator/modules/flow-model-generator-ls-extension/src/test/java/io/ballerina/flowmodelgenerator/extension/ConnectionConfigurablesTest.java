@@ -146,8 +146,10 @@ public class ConnectionConfigurablesTest {
         // Each field the form shows, by its path within the argument: the name saving gives it, the one a kept field
         // would get, and why a clashing one gets none; the literals stay as they are.
         ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of(), symbol -> false, true);
-        configurables.rewrite("{auth: {token: \"t\"}, url: \"u\", retries: 3}", "config", client, false,
-                Map.of("url", new Choice("cAuthToken", false), "retries", new Choice(null, true)));
+        // What the connection form shows in place of the argument: names where saving gives them, literals elsewhere.
+        Assert.assertEquals(configurables.rewrite("{auth: {token: \"t\"}, url: \"u\", retries: 3}", "config", client,
+                false, Map.of("url", new Choice("cAuthToken", false), "retries", new Choice(null, true))),
+                "{auth: {token: cAuthToken}, url: \"u\", retries: 3}");
         Assert.assertEquals(configurables.previews(), List.of(
                 new Preview("config", "auth.token", "cAuthToken", "string", false, false, null),
                 new Preview("config", "url", "cAuthToken", "string", false, false,

@@ -62,10 +62,10 @@ public class SourceGenerator {
      * changing anything: what the connection form shows beside each field.
      *
      * @param diagramNode the new connection's flow node, carrying the user's choices in its properties' codedata
-     * @return each field a configurable can stand for, in argument order
+     * @return each field a configurable can stand for, and each argument as saving would write it
      */
-    public List<ConnectionConfigurables.Preview> previewConnectionConfigurables(JsonElement diagramNode,
-                                                                                LSClientLogger lsClientLogger) {
+    public ConnectionConfigurables.PreviewResult previewConnectionConfigurables(JsonElement diagramNode,
+                                                                               LSClientLogger lsClientLogger) {
         FlowNode flowNode = gson.fromJson(diagramNode, FlowNode.class);
         if (flowNode.codedata() == null || flowNode.codedata().node() != NodeKind.NEW_CONNECTION) {
             throw new UserFacingException("Only a new connection's values can be made configurable.");

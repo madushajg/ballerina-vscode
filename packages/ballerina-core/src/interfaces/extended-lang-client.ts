@@ -951,6 +951,11 @@ export interface ConnectionConfigurablePreview {
 
 export interface ConnectionConfigurablesResponse {
     configurables?: ConnectionConfigurablePreview[];
+    /**
+     * Each argument as saving would write it, by its property's key: the literals replaced by their configurables'
+     * names. The connection form shows it until the connection is saved.
+     */
+    arguments?: Record<string, string>;
     errorMsg?: string;
 }
 

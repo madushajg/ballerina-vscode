@@ -41,6 +41,7 @@ import io.ballerina.flowmodelgenerator.core.diagnostics.DiagnosticRequest;
 import io.ballerina.flowmodelgenerator.core.diagnostics.DiagnosticsDebouncer;
 import io.ballerina.flowmodelgenerator.core.model.FlowNode;
 import io.ballerina.flowmodelgenerator.core.search.SearchCommand;
+import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables;
 import io.ballerina.flowmodelgenerator.extension.request.ClassMemberRequest;
 import io.ballerina.flowmodelgenerator.extension.request.ComponentDeleteRequest;
 import io.ballerina.flowmodelgenerator.extension.request.CopilotContextRequest;
@@ -295,8 +296,10 @@ public class FlowModelGeneratorService implements ExtendedLanguageServerService 
             try {
                 SourceGenerator sourceGenerator =
                         new SourceGenerator(this.workspaceManagerProxy.get(), Path.of(request.filePath()));
-                response.setConfigurables(
-                        sourceGenerator.previewConnectionConfigurables(request.flowNode(), lsClientLogger));
+                ConnectionConfigurables.PreviewResult preview =
+                        sourceGenerator.previewConnectionConfigurables(request.flowNode(), lsClientLogger);
+                response.setConfigurables(preview.configurables());
+                response.setArguments(preview.arguments());
             } catch (Throwable e) {
                 response.setError(e);
             }

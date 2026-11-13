@@ -162,6 +162,16 @@ public class ConnectionConfigurables {
     }
 
     /**
+     * What saving would make of a new connection's literals, worked out without saving it.
+     *
+     * @param configurables each field a configurable can stand for, in argument order
+     * @param arguments     each argument as saving would write it, by its property's key: the literals replaced by
+     *                      their configurables' names, as the connection form shows it before the user saves
+     */
+    public record PreviewResult(List<Preview> configurables, Map<String, String> arguments) {
+    }
+
+    /**
      * A configurable the connection refers to, with the literal it replaces.
      *
      * @param name     the configurable's name as source writes it, quoted only if a keyword

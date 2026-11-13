@@ -19,7 +19,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
-import { Codicon, Icon, ThemeColors, Tooltip } from "@wso2/ui-toolkit";
+import { Codicon, Icon, ThemeColors, Tooltip, Typography } from "@wso2/ui-toolkit";
 import { isValidConfigurableName } from "./configurables";
 
 export const CONFIGURABLE_HELP =
@@ -27,26 +27,48 @@ export const CONFIGURABLE_HELP =
 
 const INVALID_NAME = "Use letters, digits and _, and don't start with a digit.";
 
-const Line = styled.div({
+const Wrapper = styled.div({
     display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: "6px",
-    minHeight: "22px",
+    flexDirection: "column",
+    gap: "2px",
+    minWidth: 0,
     fontSize: "12px",
     lineHeight: "18px",
     color: "var(--vscode-foreground)",
 });
 
+/** One line, never wrapped: a long name is cut short, so the rename and info icons stay beside it. */
+const Line = styled.div({
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "nowrap",
+    gap: "6px",
+    minHeight: "22px",
+    minWidth: 0,
+});
+
+/** Keeps an item at its own width, so only the name gives way. */
+const Fixed = styled.span({
+    display: "inline-flex",
+    alignItems: "center",
+    flexShrink: 0,
+});
+
 const Toggle = styled("label", { shouldForwardProp: (prop) => prop !== "on" })<{ on: boolean }>(({ on }: { on: boolean }) => ({
     display: "inline-flex",
     alignItems: "center",
+    flexShrink: 0,
     gap: "6px",
     cursor: "pointer",
     color: on ? "var(--vscode-foreground)" : ThemeColors.ON_SURFACE_VARIANT,
 }));
 
 const Name = styled.span({
+    flexShrink: 1,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
     fontFamily: "var(--vscode-editor-font-family, monospace)",
     fontSize: "11.5px",
     padding: "0 6px",
@@ -58,8 +80,9 @@ const Name = styled.span({
 const NameInput = styled("input", { shouldForwardProp: (prop) => prop !== "invalid" })<{ invalid: boolean }>(({ invalid }: { invalid: boolean }) => ({
     fontFamily: "var(--vscode-editor-font-family, monospace)",
     fontSize: "11.5px",
+    flexShrink: 1,
+    minWidth: "80px",
     width: "220px",
-    maxWidth: "100%",
     padding: "1px 6px",
     borderRadius: "3px",
     color: "var(--vscode-input-foreground)",
@@ -69,6 +92,7 @@ const NameInput = styled("input", { shouldForwardProp: (prop) => prop !== "inval
 }));
 
 const IconButton = styled.button({
+    flexShrink: 0,
     display: "inline-flex",
     alignItems: "center",
     padding: "0 2px",
@@ -79,7 +103,6 @@ const IconButton = styled.button({
 });
 
 const Problem = styled.span({
-    width: "100%",
     color: "var(--vscode-errorForeground)",
 });
 
@@ -111,67 +134,82 @@ export function ConfigurableLine(props: ConfigurableLineProps) {
     const invalidDraft = editing && draft !== undefined && !isValidConfigurableName(draft.trim());
 
     return (
-        <Line data-testid={`record-form-configurable-${path}`}>
-            <Toggle on={on}>
-                <VSCodeCheckbox
-                    checked={on}
-                    aria-label="Make configurable"
-                    data-testid={`record-form-configurable-toggle-${path}`}
-                    onChange={(event: Event | React.FormEvent<HTMLElement>) =>
-                        onToggle((event.target as HTMLInputElement).checked)}
-                />
-                <Icon
-                    name="configurable-icon"
-                    sx={{ fontSize: "14px", width: "14px", height: "14px", display: "flex", alignItems: "center",
-                        justifyContent: "center", cursor: "inherit" }}
-                    iconSx={{ fontSize: "10.5px" }}
-                />
-                <span>Make configurable</span>
-            </Toggle>
-            {on && editing && (
-                <>
-                    <NameInput
-                        autoFocus
-                        invalid={invalidDraft}
-                        aria-label="Configurable name"
-                        aria-invalid={invalidDraft}
-                        data-testid={`record-form-configurable-name-input-${path}`}
-                        value={draft ?? name ?? ""}
-                        onChange={(event) => onDraftChange(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter") {
-                                event.preventDefault();
-                                onCommit();
-                            } else if (event.key === "Escape") {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                onCancel();
+        <Wrapper data-testid={`record-form-configurable-${path}`}>
+            <Line>
+                <Toggle on={on}>
+                    <VSCodeCheckbox
+                        checked={on}
+                        aria-label="Make configurable"
+                        data-testid={`record-form-configurable-toggle-${path}`}
+                        // vscode-checkbox also reports a change when React sets `checked`; only a change away from
+                        // what the line shows is the user's.
+                        onChange={(event: Event | React.FormEvent<HTMLElement>) => {
+                            const checked = (event.target as HTMLInputElement).checked;
+                            if (checked !== on) {
+                                onToggle(checked);
                             }
                         }}
                     />
-                    <IconButton type="button" aria-label="Done" onClick={onCommit}>
-                        <Codicon name="check" />
-                    </IconButton>
-                </>
-            )}
-            {on && !editing && name && (
-                <>
-                    <Name data-testid={`record-form-configurable-name-${path}`}>{name}</Name>
-                    <IconButton
-                        type="button"
-                        aria-label="Rename configurable"
-                        data-testid={`record-form-configurable-rename-${path}`}
-                        onClick={onStartRename}
+                    <Icon
+                        name="configurable-icon"
+                        sx={{ fontSize: "14px", width: "14px", height: "14px", display: "flex", alignItems: "center",
+                            justifyContent: "center", cursor: "inherit" }}
+                        iconSx={{ fontSize: "10.5px" }}
+                    />
+                    <span>Make configurable</span>
+                </Toggle>
+                {on && editing && (
+                    <>
+                        <NameInput
+                            autoFocus
+                            invalid={invalidDraft}
+                            aria-label="Configurable name"
+                            aria-invalid={invalidDraft}
+                            data-testid={`record-form-configurable-name-input-${path}`}
+                            value={draft ?? name ?? ""}
+                            onChange={(event) => onDraftChange(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    onCommit();
+                                } else if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    onCancel();
+                                }
+                            }}
+                        />
+                        <IconButton type="button" aria-label="Done" onClick={onCommit}>
+                            <Codicon name="check" />
+                        </IconButton>
+                    </>
+                )}
+                {on && !editing && name && (
+                    <>
+                        <Name data-testid={`record-form-configurable-name-${path}`} title={name}>{name}</Name>
+                        <IconButton
+                            type="button"
+                            aria-label="Rename configurable"
+                            data-testid={`record-form-configurable-rename-${path}`}
+                            onClick={onStartRename}
+                        >
+                            <Codicon name="edit" />
+                        </IconButton>
+                    </>
+                )}
+                <Fixed>
+                    <Tooltip
+                        content={<Typography variant="body3">{CONFIGURABLE_HELP}</Typography>}
+                        // Opens below and inward, as the icon sits near the modal's right edge.
+                        position="bottom-end"
+                        sx={{ maxWidth: "300px", whiteSpace: "normal", pointerEvents: "none" }}
                     >
-                        <Codicon name="edit" />
-                    </IconButton>
-                </>
-            )}
-            <Tooltip content={CONFIGURABLE_HELP}>
-                <Codicon name="info" sx={{ color: ThemeColors.ON_SURFACE_VARIANT, cursor: "help" }} />
-            </Tooltip>
+                        <Codicon name="info" sx={{ color: ThemeColors.ON_SURFACE_VARIANT, cursor: "help" }} />
+                    </Tooltip>
+                </Fixed>
+            </Line>
             {invalidDraft && <Problem role="alert">{INVALID_NAME}</Problem>}
             {on && !invalidDraft && error && <Problem role="alert">{error}</Problem>}
-        </Line>
+        </Wrapper>
     );
 }

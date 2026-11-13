@@ -58,6 +58,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -157,7 +158,7 @@ public class NewConnectionBuilder extends CallBuilder {
      * Replaces the literals among the connection's arguments with configurables, and returns those to declare.
      */
     private List<Configurable> useConfigurables(SourceBuilder sourceBuilder) {
-        return planConfigurables(sourceBuilder, false)
+        return planConfigurables(sourceBuilder, null)
                 .map(ConnectionConfigurables::configurables)
                 .orElse(List.of());
     }
@@ -167,20 +168,28 @@ public class NewConnectionBuilder extends CallBuilder {
      * changing the connection: what the connection form shows beside each field before the user saves.
      *
      * @param sourceBuilder the source builder of the connection's flow node
-     * @return each field a configurable can stand for, in argument order
+     * @return each field a configurable can stand for, and each argument as saving would write it
      */
-    public List<ConnectionConfigurables.Preview> previewConfigurables(SourceBuilder sourceBuilder) {
-        return planConfigurables(sourceBuilder, true)
+    public ConnectionConfigurables.PreviewResult previewConfigurables(SourceBuilder sourceBuilder) {
+        Map<String, String> arguments = new LinkedHashMap<>();
+        List<ConnectionConfigurables.Preview> previews = planConfigurables(sourceBuilder, arguments)
                 .map(ConnectionConfigurables::previews)
                 .orElse(List.of());
+        return new ConnectionConfigurables.PreviewResult(previews, arguments);
     }
 
     /**
      * Names the configurables of the connection's literals. Saving rewrites each argument in place; previewing leaves
-     * the arguments as they are. Each argument's property may carry what the user chose for its fields under the
-     * {@value #CONFIGURABLES_DATA_KEY} key of its codedata (see {@link ConnectionConfigurables.Choice#fromData}).
+     * the arguments as they are and collects each one as saving would write it. Each argument's property may carry
+     * what the user chose for its fields under the {@value #CONFIGURABLES_DATA_KEY} key of its codedata (see
+     * {@link ConnectionConfigurables.Choice#fromData}).
+     *
+     * @param previewArguments where to collect the rewritten arguments by property key when previewing, or
+     *                         {@code null} to save
      */
-    private Optional<ConnectionConfigurables> planConfigurables(SourceBuilder sourceBuilder, boolean preview) {
+    private Optional<ConnectionConfigurables> planConfigurables(SourceBuilder sourceBuilder,
+                                                                Map<String, String> previewArguments) {
+        boolean preview = previewArguments != null;
         Map<String, Property> properties = sourceBuilder.flowNode.properties();
         String connection = properties.get(Property.VARIABLE_KEY).value().toString();
         Optional<SemanticModel> semanticModel = sourceBuilder.workspaceManager.semanticModel(sourceBuilder.filePath);
@@ -225,7 +234,9 @@ public class NewConnectionBuilder extends CallBuilder {
             String argument = configurables.rewrite(property.toSourceCode(), parameter.name(),
                     parameter.typeSymbol(), parameter.kind() == ParameterData.Kind.INCLUDED_FIELD,
                     choicesOf(property));
-            if (!preview) {
+            if (preview) {
+                previewArguments.put(key, argument);
+            } else {
                 properties.put(key, AiUtils.createUpdatedProperty(property, argument));
             }
         }

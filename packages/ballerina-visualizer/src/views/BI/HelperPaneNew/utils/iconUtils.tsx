@@ -52,13 +52,13 @@ export const getHelperPaneIcon = (
     const iconName = ICON_NAME_MAP[iconType];
     const scale = ICON_SCALE[iconName];
     if (scale) {
-        // Drawn edge to edge, the glyph looks larger than its neighbours at the same size: shrink the glyph, not
-        // its box, so the rows stay aligned.
+        // Drawn edge to edge, the glyph looks larger than its neighbours at the same size. It keeps their box and
+        // place, and is only drawn smaller around its centre.
         return (
             <Icon
                 name={iconName}
-                sx={{ fontSize, display: "flex", alignItems: "center", justifyContent: "center" }}
-                iconSx={{ fontSize: `calc(${fontSize} * ${scale})` }}
+                sx={{ fontSize }}
+                iconSx={{ display: "inline-block", transform: `scale(${scale})`, transformOrigin: "center" }}
             />
         );
     }
