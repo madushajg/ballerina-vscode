@@ -378,7 +378,10 @@ function ExpressionOnlyField({ field, path }: { field: TypeField; path: string }
 
 // ---- Records --------------------------------------------------------------------------------------------------
 
-/** A record's fields under a header, indented beside a guide line so it is clear which header they belong to. */
+/**
+ * A record's fields under a header, indented beside a guide line so it is clear which header they belong to. The
+ * header names the field but not its record type: nothing is typed into it, and the tree shows the type.
+ */
 function RecordSection({ field, path }: { field: TypeField; path: string }) {
     const [open, setOpen] = useState(true);
     const record = sectionRecord(field);
@@ -402,7 +405,6 @@ function RecordSection({ field, path }: { field: TypeField; path: string }) {
                     {field.name}
                     {isRequiredField(field) && <RequiredMark>*</RequiredMark>}
                 </SectionTitle>
-                <TypeChip label={typeLabel(record)} />
             </SectionHeader>
             {open && (
                 <SectionBody>

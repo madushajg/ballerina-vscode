@@ -74,7 +74,6 @@ export const RecordFormSkeleton = () => (
             <Row>
                 <SkeletonBase width={12} height={12} />
                 <SkeletonBase width="18%" height={14} />
-                <SkeletonBase width={96} height={14} borderRadius="999px" />
             </Row>
             <Section>
                 <FieldSkeleton labelWidth="16%" withDescription={false} />

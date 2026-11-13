@@ -181,6 +181,14 @@ describe("RecordFormView", () => {
         expect(byTestId("record-form-mode-auth")).toBeNull();
     });
 
+    it("names a section by its field, not its record type, while its fields keep their types", () => {
+        render(connectionConfig());
+        const chips = Array.from(container.querySelectorAll('[data-testid="type-chip"]')).map((chip) => chip.textContent);
+        expect(chips).not.toContain("BearerTokenConfig");
+        expect(chips).toContain("string");
+        expect(chips).toContain("string[]");
+    });
+
     it("writes typed text as a string literal", () => {
         const record = connectionConfig();
         render(record);
