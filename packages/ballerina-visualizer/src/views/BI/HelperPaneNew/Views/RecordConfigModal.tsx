@@ -171,9 +171,9 @@ export const ExpressionEditorDocumentation = styled.div({
 
 export const RightColumnHeader = styled.div({
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '12px',
-    marginBottom: '8px'
+    marginBottom: '4px'
 });
 
 export const FormContainer = styled.div({
@@ -1201,25 +1201,26 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                     </LeftColumn>
                     <RightColumn>
                         <ExpressionEditorContainer ref={modalContainerRef}>
-                            <RightColumnHeader>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <ExpressionEditorLabel>
+                            <div>
+                                <RightColumnHeader>
+                                    <ExpressionEditorLabel style={{ flex: 1, minWidth: 0, marginBottom: 0 }}>
                                         {field?.label || "Expression"}
                                     </ExpressionEditorLabel>
-                                    {field?.documentation && (
-                                        <ExpressionEditorDocumentation>
-                                            <ReactMarkdown>{field.documentation}</ReactMarkdown>
-                                        </ExpressionEditorDocumentation>
-                                    )}
-                                </div>
-                                <ModeToggle
-                                    primaryLabel="Form"
-                                    secondaryLabel="Code"
-                                    secondary={recordView === "code"}
-                                    onChange={(code) => switchRecordView(code ? "code" : "form")}
-                                    testId="record-view-switch"
-                                />
-                            </RightColumnHeader>
+                                    <ModeToggle
+                                        primaryLabel="Form"
+                                        secondaryLabel="Code"
+                                        secondary={recordView === "code"}
+                                        onChange={(code) => switchRecordView(code ? "code" : "form")}
+                                        testId="record-view-switch"
+                                    />
+                                </RightColumnHeader>
+                                {/* Below the label and switch, so it takes the column's full width. */}
+                                {field?.documentation && (
+                                    <ExpressionEditorDocumentation>
+                                        <ReactMarkdown>{field.documentation}</ReactMarkdown>
+                                    </ExpressionEditorDocumentation>
+                                )}
+                            </div>
                             {recordView === "form" ? (
                                 <FormContainer>
                                     {isLoading || adoptingConfigurables ? (
