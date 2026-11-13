@@ -24,6 +24,7 @@ import { useRpcContext } from "@wso2/ballerina-rpc-client";
 import { RecordConfigView } from "./RecordConfigView";
 import { ChipExpressionEditorComponent, Context as FormContext, HelperpaneOnChangeOptions, FieldProvider, FormField, FormExpressionEditorProps, getPropertyFromFormField, RecordConfigExpressionEditorConfig, ExpandedEditor, InputMode, ModeToggle } from "@wso2/ballerina-side-panel";
 import { RecordFormView, ExpressionEditorArgs, FieldFooterArgs } from "../Components/RecordFormView";
+import { RecordFormSkeleton } from "../../../../components/Skeletons";
 import { ConfigurableLine } from "../Components/RecordFormView/ConfigurableLine";
 import { choicesToSend, configurableFields, FieldConfigurables, fieldAtPath, isConfigurable, isValidConfigurableName, replaceIdentifiers } from "../Components/RecordFormView/configurables";
 import type { ConnectionConfigurableChoices, ConnectionConfigurablePreview, ConnectionConfigurablesResponse } from "@wso2/ballerina-core";
@@ -328,7 +329,8 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
     const initialMountRef = useRef<boolean>(true);
     const onChangeRef = useRef(onChange);
     const sourceCode = useRef<string>(currentValue);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // Loading from the start: the record is fetched as the modal opens, and the form shows a skeleton until then.
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [hasTooManyFieldsError, setHasTooManyFieldsError] = useState<boolean>(false);
     const TOO_MANY_FIELDS_ERROR = "Record config is too large to send. The record type has too many nested fields.";
     // Local state for expression value - only update form on save/close
@@ -583,6 +585,10 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
 
 
     const getExistingRecordModel = async () => {
+        if (configurables) {
+            // Until the configurables the connection uses are read in, their fields would show as references.
+            setAdoptingConfigurables(true);
+        }
         await fetchRecordModelFromSource(currentValue);
         await adoptExistingConfigurables(currentValue);
     };
@@ -894,11 +900,11 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
      */
     const adoptExistingConfigurables = async (source: string) => {
         const record = recordModelRef.current[0];
-        if (!configurables || !record) {
-            return;
-        }
-        setAdoptingConfigurables(true);
         try {
+            if (!configurables || !record) {
+                return;
+            }
+            setAdoptingConfigurables(true);
             const parameter = field?.key ?? recordTypeField.key;
             const response = await configurables.preview(source, {});
             const adopted: FieldConfigurables = {};
@@ -1216,7 +1222,9 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                             </RightColumnHeader>
                             {recordView === "form" ? (
                                 <FormContainer>
-                                    {adoptingConfigurables ? null : recordModel[0] && !hasTooManyFieldsError ? (
+                                    {isLoading || adoptingConfigurables ? (
+                                        <RecordFormSkeleton />
+                                    ) : recordModel[0] && !hasTooManyFieldsError ? (
                                         <RecordFormView
                                             key={formKey}
                                             record={recordModel[0]}
@@ -1235,14 +1243,14 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                                             )}
                                             renderFieldFooter={configurables ? renderConfigurableLine : undefined}
                                         />
-                                    ) : !isLoading ? (
+                                    ) : (
                                         <NotAFormMessage data-testid="record-form-unavailable">
                                             <span>This value can't be shown as a form.</span>
                                             <SwitchToCodeButton type="button" onClick={() => switchRecordView("code")}>
                                                 Switch to Code
                                             </SwitchToCodeButton>
                                         </NotAFormMessage>
-                                    ) : null}
+                                    )}
                                     {formDiagnostics && formDiagnostics.length > 0 && (
                                         <ErrorBanner errorMsg={formDiagnostics.map((d: any) => d.message).join(', ')} />
                                     )}
