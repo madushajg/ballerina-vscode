@@ -126,6 +126,7 @@ import MatchForm from "../MatchForm";
 import { FormSubmitOptions } from "../../FlowDiagram";
 import { AI_PROMPT_TYPE, getHelperPaneNew } from "../../HelperPaneNew";
 import { ConfigureRecordPage, RecordConfigurablesSupport } from "../../HelperPaneNew/Views/RecordConfigModal";
+import type { FieldConfigurables } from "../../HelperPaneNew/Components/RecordFormView/configurables";
 import { VariableForm } from "../DeclareVariableForm";
 import KnowledgeBaseForm from "../KnowledgeBaseForm";
 import SendEventForm from "../SendEventForm";
@@ -835,7 +836,36 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
         if (node && targetLineRange) {
             const updatedNode = mergeFormDataWithFlowNode(data, targetLineRange, dirtyFields);
             const editorConfig = data["editorConfig"];
-            onSubmit(updatedNode, editorConfig, formImportsRef.current);
+            const saved = onSubmit(updatedNode, editorConfig, formImportsRef.current);
+            if (isConnectionForm) {
+                void renameConfigurablesAfterSave(saved);
+            }
+        }
+    };
+
+    /**
+     * Renames the existing configurables the user renamed in the record editor, across the project. The connection is
+     * saved first, with the names it already uses: renaming before would move its source under the range it is saved
+     * at. The user agreed to the rename where they typed it ("Renaming will update all references across the project").
+     */
+    const renameConfigurablesAfterSave = async (saved: unknown) => {
+        const renames = Object.values(fieldConfigurablesRef.current)
+            .flatMap((fields) => Object.values(fields))
+            .filter((field) => field.existing && !field.keep && field.renameTo && field.declaration);
+        if (renames.length === 0) {
+            return;
+        }
+        await saved;
+        for (const field of renames) {
+            try {
+                await rpcClient.getBIDiagramRpcClient().renameIdentifier({
+                    fileName: field.declaration!.filePath,
+                    position: { line: field.declaration!.line, character: field.declaration!.offset },
+                    newName: field.renameTo!
+                });
+            } catch (error) {
+                console.error(`>>> Could not rename configurable ${field.name} to ${field.renameTo}`, error);
+            }
         }
     };
 
@@ -963,9 +993,12 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
 
     // A new connection: whether it is one, the form's values as last typed (so a preview sees the connection name),
     // and what the user chose for the configurables of each record field, by field key.
-    const isNewConnection = node?.codedata?.node === "NEW_CONNECTION" && node?.codedata?.isNew === true;
+    // A connection's record fields can make their values configurable, whether the connection is new or edited.
+    const isConnectionForm = node?.codedata?.node === "NEW_CONNECTION";
     const latestFormValuesRef = useRef<FormValues | undefined>(undefined);
     const configurableChoicesRef = useRef<Record<string, ConnectionConfigurableChoices>>({});
+    // Everything the record editor knows of each field's configurables, including renames applied after saving.
+    const fieldConfigurablesRef = useRef<Record<string, FieldConfigurables>>({});
     // A record field of a new connection shows its configurables' names, as saving will write it; the values typed
     // for them are held here by field key, with the text shown in their place, until the connection is saved.
     const heldRecordValuesRef = useRef<Record<string, { literal: string; shown: string }>>({});
@@ -1033,7 +1066,7 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
      */
     const withConfigurableChoices = (flowNode: FlowNode, overrides?: Record<string, ConnectionConfigurableChoices>): FlowNode => {
         const choicesByKey = { ...configurableChoicesRef.current, ...overrides };
-        if (!isNewConnection || !flowNode?.properties || Object.keys(choicesByKey).length === 0) {
+        if (!isConnectionForm || !flowNode?.properties || Object.keys(choicesByKey).length === 0) {
             return flowNode;
         }
         const properties = { ...flowNode.properties } as NodeProperties;
@@ -1055,13 +1088,14 @@ export const FlowNodeForm = forwardRef<FormExpressionEditorRef, FlowNodeFormProp
 
     /** Lets the record editor of a new connection's field make its values configurable; nothing for other forms. */
     const recordConfigurablesFor = (fieldKey: string): RecordConfigurablesSupport | undefined => {
-        if (!isNewConnection) {
+        if (!isConnectionForm) {
             return undefined;
         }
         return {
-            initialChoices: configurableChoicesRef.current[fieldKey] ?? {},
-            onChoicesChange: (choices) => {
+            initialChoices: fieldConfigurablesRef.current[fieldKey] ?? {},
+            onChoicesChange: (choices, all) => {
                 configurableChoicesRef.current = { ...configurableChoicesRef.current, [fieldKey]: choices };
+                fieldConfigurablesRef.current = { ...fieldConfigurablesRef.current, [fieldKey]: all };
             },
             preview: async (recordValue, choices) => {
                 const values = { ...(latestFormValuesRef.current ?? {}), [fieldKey]: recordValue };

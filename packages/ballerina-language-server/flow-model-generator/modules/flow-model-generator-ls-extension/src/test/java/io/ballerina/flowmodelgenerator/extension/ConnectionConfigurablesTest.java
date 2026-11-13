@@ -20,12 +20,14 @@ package io.ballerina.flowmodelgenerator.extension;
 
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.api.symbols.RecordTypeSymbol;
+import io.ballerina.compiler.api.symbols.Symbol;
 import io.ballerina.compiler.api.symbols.TypeDefinitionSymbol;
 import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.flowmodelgenerator.core.UserFacingException;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Choice;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Configurable;
+import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Declaration;
 import io.ballerina.flowmodelgenerator.core.utils.ConnectionConfigurables.Preview;
 import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.Package;
@@ -37,6 +39,7 @@ import org.testng.annotations.Test;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Names the configurables of fields that would share a name.
@@ -47,6 +50,7 @@ public class ConnectionConfigurablesTest {
     private RecordTypeSymbol config;
     private RecordTypeSymbol pool;
     private RecordTypeSymbol client;
+    private Symbol sharedUrl;
 
     @BeforeClass
     public void compile() {
@@ -57,6 +61,9 @@ public class ConnectionConfigurablesTest {
         config = record(model, "Config");
         pool = record(model, "Pool");
         client = record(model, "Client");
+        sharedUrl = model.moduleSymbols().stream()
+                .filter(symbol -> symbol.getName().orElse("").equals("sharedUrl"))
+                .findFirst().orElseThrow();
     }
 
     @Test
@@ -158,14 +165,59 @@ public class ConnectionConfigurablesTest {
     }
 
     @Test
+    public void aPreviewShowsAConfigurableTheConnectionAlreadyUses() {
+        // Editing a connection: a field that refers to a configurable shows its value, read from Config.toml, and
+        // where it is declared, for renaming it; the reference stays as it is.
+        Declaration declaration = new Declaration("/project/config.bal", 3, 20);
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of("sharedUrl", sharedUrl),
+                symbol -> true, true)
+                .withExisting(name -> name.equals("sharedUrl") ? Optional.of("\"https://api\"") : Optional.empty(),
+                        symbol -> Optional.of(declaration));
+        Assert.assertEquals(configurables.rewrite("{url: sharedUrl}", "config", client, false),
+                "{url: sharedUrl}");
+        Assert.assertEquals(configurables.previews(), List.of(new Preview("config", "url", "sharedUrl", "string",
+                true, false, null, "\"https://api\"", true, declaration)));
+    }
+
+    @Test
+    public void aConfigurableTheConnectionAlreadyUsesKeepsItsName() {
+        // Saving an edited connection with the value the form showed: the configurable is reused, though other code
+        // refers to it, and only its value changes.
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of("sharedUrl", sharedUrl),
+                symbol -> true);
+        Assert.assertEquals(configurables.rewrite("{url: \"https://new\"}", "config", client, false,
+                Map.of("url", new Choice("sharedUrl", false, true))), "{url: sharedUrl}");
+        Assert.assertEquals(configurables.configurables().stream().map(Configurable::exists).toList(),
+                List.of(true));
+    }
+
+    @Test
+    public void aConfigurableOtherCodeUsesCantBeTakenOver() {
+        ConnectionConfigurables configurables = new ConnectionConfigurables("c", Map.of("sharedUrl", sharedUrl),
+                symbol -> true);
+        UserFacingException refusal = Assert.expectThrows(UserFacingException.class,
+                () -> configurables.rewrite("{url: \"https://new\"}", "config", client, false,
+                        Map.of("url", new Choice("sharedUrl", false))));
+        Assert.assertEquals(refusal.getMessage(), "'sharedUrl' is already used in this module. Choose another name.");
+    }
+
+    @Test
+    public void aBallerinaStringLiteralEscapesWhatItMust() {
+        Assert.assertEquals(ConnectionConfigurables.ballerinaStringLiteral("say \"hi\"\tC:\\x\n"),
+                "\"say \\\"hi\\\"\\tC:\\\\x\\n\"");
+    }
+
+    @Test
     public void choicesAreReadFromAPropertysCodedata() {
         Map<String, Object> data = Map.of(
                 "auth.token", Map.of("name", " apiToken "),
                 "url", Map.of("keep", true),
+                "retries", Map.of("name", "sharedUrl", "existing", true),
                 "ignored", "not a choice");
         Assert.assertEquals(Choice.fromData(data), Map.of(
                 "auth.token", new Choice("apiToken", false),
-                "url", new Choice(null, true)));
+                "url", new Choice(null, true),
+                "retries", new Choice("sharedUrl", false, true)));
         Assert.assertEquals(Choice.fromData(null), Map.of());
     }
 

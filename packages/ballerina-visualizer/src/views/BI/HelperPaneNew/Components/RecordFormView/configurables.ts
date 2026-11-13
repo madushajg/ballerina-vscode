@@ -26,6 +26,17 @@
 import type { ConnectionConfigurableChoice, ConnectionConfigurableChoices, TypeField } from "@wso2/ballerina-core";
 import { childPath, fieldKind, isRequiredField, sectionRecord, shownFields } from "./model";
 
+/**
+ * What the form knows about one field's configurable: what is sent to the language server, and, for a configurable
+ * the connection already uses, where it is declared and the name it is renamed to once the connection is saved.
+ */
+export interface FieldConfigurable extends ConnectionConfigurableChoice {
+    renameTo?: string;
+    declaration?: { filePath: string; line: number; offset: number };
+}
+
+export type FieldConfigurables = Record<string, FieldConfigurable>;
+
 /** The fields a configurable can stand for: the checked simple fields, through records but not into lists. */
 export function configurableFields(record: TypeField, path = ""): { path: string; field: TypeField }[] {
     const found: { path: string; field: TypeField }[] = [];
@@ -50,17 +61,41 @@ export function isConfigurable(field: TypeField, choice: ConnectionConfigurableC
  * What to tell the language server for the record's fields: `keep` for each one that stays a literal, and the name
  * for each one the user named. A field made configurable under its generated name needs no entry.
  */
-export function choicesToSend(record: TypeField, choices: ConnectionConfigurableChoices): ConnectionConfigurableChoices {
+export function choicesToSend(record: TypeField, choices: FieldConfigurables): ConnectionConfigurableChoices {
     const send: ConnectionConfigurableChoices = {};
     for (const { path, field } of configurableFields(record)) {
         const choice = choices[path];
         if (!isConfigurable(field, choice)) {
             send[path] = { keep: true };
         } else if (choice?.name) {
-            send[path] = { name: choice.name };
+            send[path] = choice.existing ? { name: choice.name, existing: true } : { name: choice.name };
         }
     }
     return send;
+}
+
+/** The field of a record at a dotted path, through records and the chosen member of a union. */
+export function fieldAtPath(record: TypeField, path: string): TypeField | undefined {
+    let current: TypeField | undefined = record;
+    for (const key of path.split(".")) {
+        current = (sectionRecord(current).fields ?? []).find((field) => field.name === key);
+        if (!current) {
+            return undefined;
+        }
+    }
+    return current;
+}
+
+/**
+ * Source with identifiers swapped, leaving string literals and templates as they are: turns the configurables'
+ * names the code view shows back into the values they stand for, and back again.
+ */
+export function replaceIdentifiers(source: string, replacements: Record<string, string>): string {
+    if (Object.keys(replacements).length === 0) {
+        return source;
+    }
+    return source.replace(/"(?:[^"\\\n]|\\.)*"|`[^`]*`|[A-Za-z_][A-Za-z0-9_]*/g,
+        (token) => token.startsWith("\"") || token.startsWith("`") ? token : replacements[token] ?? token);
 }
 
 /** Whether a configurable's name is an identifier the language server accepts. */

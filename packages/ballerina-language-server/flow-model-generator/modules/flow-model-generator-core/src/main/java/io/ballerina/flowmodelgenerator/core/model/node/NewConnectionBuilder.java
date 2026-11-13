@@ -24,6 +24,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.flowmodelgenerator.core.AiUtils;
 import io.ballerina.flowmodelgenerator.core.ConnectionActionProvider;
 import io.ballerina.flowmodelgenerator.core.model.Codedata;
+import io.ballerina.flowmodelgenerator.core.model.FlowNode;
 import io.ballerina.flowmodelgenerator.core.model.FormBuilder;
 import io.ballerina.flowmodelgenerator.core.model.NodeBuilder;
 import io.ballerina.flowmodelgenerator.core.model.NodeKind;
@@ -44,6 +45,10 @@ import io.ballerina.modelgenerator.commons.ParameterData;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
 import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.semantic.ast.TomlBooleanValueNode;
+import io.ballerina.toml.semantic.ast.TomlDoubleValueNodeNode;
+import io.ballerina.toml.semantic.ast.TomlLongValueNode;
+import io.ballerina.toml.semantic.ast.TomlStringValueNode;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import io.ballerina.tools.text.LinePosition;
 import org.ballerinalang.langserver.LSClientLogger;
@@ -65,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -112,8 +118,11 @@ public class NewConnectionBuilder extends CallBuilder {
     @Override
     public Map<Path, List<TextEdit>> toSource(SourceBuilder sourceBuilder) {
         Codedata codedata = sourceBuilder.flowNode.codedata();
-        List<Configurable> configurables = Boolean.TRUE.equals(codedata.isNew())
-                && !sourceBuilder.isForDiagnostics() ? useConfigurables(sourceBuilder) : List.of();
+        // A new connection's literals become configurables. An existing one's do only when its form sent what the
+        // user chose for them, so an edit made without that form keeps the source as it is.
+        boolean configures = Boolean.TRUE.equals(codedata.isNew()) || hasConfigurableChoices(sourceBuilder.flowNode);
+        List<Configurable> configurables = configures && !sourceBuilder.isForDiagnostics()
+                ? useConfigurables(sourceBuilder) : List.of();
 
         sourceBuilder
                 .token().keyword(SyntaxKind.FINAL_KEYWORD).stepOut()
@@ -205,8 +214,11 @@ public class NewConnectionBuilder extends CallBuilder {
                 .filter(symbol -> symbol.getName().isPresent())
                 .collect(Collectors.toMap(symbol -> symbol.getName().get(), symbol -> symbol,
                         (first, second) -> first));
+        Path projectRoot = sourceBuilder.workspaceManager.projectRoot(sourceBuilder.filePath);
         ConnectionConfigurables configurables = new ConnectionConfigurables(connection, moduleSymbols,
-                symbol -> !model.references(symbol, false).isEmpty(), preview);
+                symbol -> !model.references(symbol, false).isEmpty(), preview)
+                .withExisting(configuredValues(sourceBuilder, projectRoot),
+                        symbol -> declarationOf(projectRoot, symbol));
         Codedata codedata = sourceBuilder.flowNode.codedata();
         String connector = connectorId(codedata.org(), codedata.resolvePackageName(), codedata.module(),
                 codedata.object(), codedata.version());
@@ -241,6 +253,63 @@ public class NewConnectionBuilder extends CallBuilder {
             }
         }
         return Optional.of(configurables);
+    }
+
+    /**
+     * Whether the connection form sent what the user chose for any argument's configurables.
+     */
+    private static boolean hasConfigurableChoices(FlowNode flowNode) {
+        return flowNode.properties() != null && flowNode.properties().values().stream()
+                .anyMatch(property -> property != null && property.codedata() != null
+                        && property.codedata().data() != null
+                        && property.codedata().data().containsKey(CONFIGURABLES_DATA_KEY));
+    }
+
+    /**
+     * An existing configurable's value, read from the project's Config.toml, as a Ballerina literal.
+     */
+    private static Function<String, Optional<String>> configuredValues(SourceBuilder sourceBuilder, Path projectRoot) {
+        Optional<Toml> toml = readToml(projectRoot.resolve(CONFIG_TOML));
+        String packageName = sourceBuilder.workspaceManager.project(sourceBuilder.filePath)
+                .map(project -> project.currentPackage().packageName().value())
+                .orElse("");
+        String moduleKey = sourceBuilder.workspaceManager.project(sourceBuilder.filePath)
+                .map(project -> project.currentPackage().packageOrg().value() + "." + packageName)
+                .orElse("");
+        return key -> toml.flatMap(t -> t.<TomlValueNode>get(key)
+                        .or(() -> t.getTable(moduleKey).flatMap(table -> table.get(key)))
+                        .or(() -> t.getTable(packageName).flatMap(table -> table.get(key))))
+                .flatMap(NewConnectionBuilder::ballerinaLiteral);
+    }
+
+    private static Optional<String> ballerinaLiteral(TomlValueNode value) {
+        if (value instanceof TomlStringValueNode string) {
+            return Optional.of(ConnectionConfigurables.ballerinaStringLiteral(string.getValue()));
+        }
+        if (value instanceof TomlLongValueNode number) {
+            return Optional.of(number.getValue().toString());
+        }
+        if (value instanceof TomlDoubleValueNodeNode number) {
+            return Optional.of(number.getValue().toString());
+        }
+        if (value instanceof TomlBooleanValueNode bool) {
+            return Optional.of(bool.getValue().toString());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Where a configurable of the root module is declared, for renaming it across the project.
+     */
+    private static Optional<ConnectionConfigurables.Declaration> declarationOf(Path projectRoot, Symbol symbol) {
+        return symbol.getLocation().flatMap(location -> {
+            Path file = projectRoot.resolve(location.lineRange().fileName());
+            if (!Files.exists(file)) {
+                return Optional.empty();
+            }
+            return Optional.of(new ConnectionConfigurables.Declaration(file.toString(),
+                    location.lineRange().startLine().line(), location.lineRange().startLine().offset()));
+        });
     }
 
     /**

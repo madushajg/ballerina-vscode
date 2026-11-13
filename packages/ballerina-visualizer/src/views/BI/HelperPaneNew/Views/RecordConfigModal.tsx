@@ -25,7 +25,7 @@ import { RecordConfigView } from "./RecordConfigView";
 import { ChipExpressionEditorComponent, Context as FormContext, HelperpaneOnChangeOptions, FieldProvider, FormField, FormExpressionEditorProps, getPropertyFromFormField, RecordConfigExpressionEditorConfig, ExpandedEditor, InputMode, ModeToggle } from "@wso2/ballerina-side-panel";
 import { RecordFormView, ExpressionEditorArgs, FieldFooterArgs } from "../Components/RecordFormView";
 import { ConfigurableLine } from "../Components/RecordFormView/ConfigurableLine";
-import { choicesToSend, isConfigurable, isValidConfigurableName } from "../Components/RecordFormView/configurables";
+import { choicesToSend, configurableFields, FieldConfigurables, fieldAtPath, isConfigurable, isValidConfigurableName, replaceIdentifiers } from "../Components/RecordFormView/configurables";
 import type { ConnectionConfigurableChoices, ConnectionConfigurablePreview, ConnectionConfigurablesResponse } from "@wso2/ballerina-core";
 
 /**
@@ -34,11 +34,14 @@ import type { ConnectionConfigurableChoices, ConnectionConfigurablePreview, Conn
  */
 export interface RecordConfigurablesSupport {
     /** What the user chose for this field earlier, by field path. */
-    initialChoices: ConnectionConfigurableChoices;
+    initialChoices: FieldConfigurables;
     /** The configurables saving would create for the record's current value and the user's choices. */
     preview: (recordValue: string, choices: ConnectionConfigurableChoices) => Promise<ConnectionConfigurablesResponse>;
-    /** The choices to save the connection with, whenever they change. */
-    onChoicesChange: (choices: ConnectionConfigurableChoices) => void;
+    /**
+     * Whenever the user's choices change: what to save the connection with, and everything the form knows of them,
+     * including the existing configurables to rename once the connection is saved.
+     */
+    onChoicesChange: (choices: ConnectionConfigurableChoices, all: FieldConfigurables) => void;
 }
 import { PromptFieldEditorContext } from "../Components/RecordConstructView/PromptFieldEditorContext";
 import { useForm } from "react-hook-form";
@@ -200,6 +203,47 @@ export const SwitchToCodeButton = styled.button({
     font: 'inherit'
 });
 
+/** Under the code view: each configurable the record uses and the value it is set to. */
+export const ConfigurablesBox = styled.div({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    padding: '8px 10px',
+    border: `1px solid ${ThemeColors.OUTLINE_VARIANT}`,
+    borderRadius: '4px',
+    fontFamily: 'var(--vscode-editor-font-family, monospace)',
+    fontSize: '12px',
+    maxHeight: '120px',
+    overflowY: 'auto',
+    flexShrink: 0
+});
+
+export const ConfigurablesTitle = styled.div({
+    fontFamily: 'var(--vscode-font-family)',
+    fontSize: '11px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: ThemeColors.ON_SURFACE_VARIANT,
+    marginBottom: '2px'
+});
+
+export const ConfigurableEntry = styled.div({
+    display: 'flex',
+    gap: '6px',
+    minWidth: 0,
+    whiteSpace: 'nowrap'
+});
+
+export const ConfigurableEquals = styled.span({
+    color: ThemeColors.ON_SURFACE_VARIANT
+});
+
+export const ConfigurableValue = styled.span({
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+});
+
 /** How the right side of the modal shows the record: as a form of its fields, or as source. */
 type RecordView = "form" | "code";
 
@@ -301,8 +345,14 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
 
     // A new connection's configurables. What the user chose (by field path) and any rename in progress live here,
     // not in the form's fields, so both survive switching to the code view and back.
-    const [configurableChoices, setConfigurableChoices] = useState<ConnectionConfigurableChoices>(
+    const [configurableChoices, setConfigurableChoices] = useState<FieldConfigurables>(
         () => configurables?.initialChoices ?? {});
+    // The record as saving will write it, with the configurables' names, and the value it stands for.
+    const [shownSource, setShownSource] = useState<{ literal: string; text: string } | null>(null);
+    // What is typed in the code view while it shows names; the model holds the values the names stand for.
+    const [codeDraft, setCodeDraft] = useState<string | null>(null);
+    // Opening an existing connection: its configurables' values are read before the form shows them.
+    const [adoptingConfigurables, setAdoptingConfigurables] = useState(false);
     const [configurablePreviews, setConfigurablePreviews] = useState<Record<string, ConnectionConfigurablePreview>>({});
     const [renaming, setRenaming] = useState<{ path: string; draft: string } | null>(null);
     const previewRequestIdRef = useRef(0);
@@ -325,6 +375,9 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                 .filter((preview) => preview.parameter.replace(/^'/, "") === parameter)
                 .forEach((preview) => { byPath[preview.fieldPath] = preview; });
             setConfigurablePreviews(byPath);
+            const text = Object.entries(response?.arguments ?? {})
+                .find(([key]) => key.replace(/^'/, "") === parameter)?.[1];
+            setShownSource(text === undefined ? null : { literal: recordValue, text });
         }, 400)
     ).current;
     // A new key whenever the model is replaced (loaded, re-parsed from code, member switched), so the
@@ -531,6 +584,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
 
     const getExistingRecordModel = async () => {
         await fetchRecordModelFromSource(currentValue);
+        await adoptExistingConfigurables(currentValue);
     };
 
 
@@ -738,13 +792,13 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
             return;
         }
         const send = choicesToSend(record, configurableChoices);
-        configurables.onChoicesChange(send);
+        configurables.onChoicesChange(send, configurableChoices);
         debouncedPreviewConfigurables(localExpressionValue, send, field?.key ?? recordTypeField.key);
     }, [configurableChoices, localExpressionValue, modelRevision, recordModel]);
 
     useEffect(() => () => debouncedPreviewConfigurables.cancel(), []);
 
-    const setConfigurableChoice = (path: string, choice: { keep?: boolean; name?: string }) => {
+    const setConfigurableChoice = (path: string, choice: { keep?: boolean; name?: string; renameTo?: string }) => {
         setConfigurableChoices((previous) => ({ ...previous, [path]: { ...previous[path], ...choice } }));
     };
 
@@ -757,9 +811,16 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         if (!isValidConfigurableName(name)) {
             return false;
         }
+        const choice = configurableChoices[renaming.path];
+        if (choice?.existing) {
+            // The connection keeps the configurable it uses; the rename is applied across the project on save.
+            setConfigurableChoice(renaming.path, { renameTo: name === choice.name ? undefined : name });
+            setRenaming(null);
+            return true;
+        }
         // Renaming back to the generated name is the same as not renaming.
         const generated = configurablePreviews[renaming.path];
-        const isGenerated = generated && !configurableChoices[renaming.path]?.name && generated.name === name;
+        const isGenerated = generated && !choice?.name && generated.name === name;
         setConfigurableChoice(renaming.path, { name: isGenerated ? undefined : name });
         setRenaming(null);
         return true;
@@ -778,8 +839,9 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
             <ConfigurableLine
                 path={args.path}
                 on={on}
-                name={choice?.name ?? preview?.name}
+                name={choice?.renameTo ?? choice?.name ?? preview?.name}
                 error={preview?.error}
+                existing={choice?.existing}
                 editing={editing}
                 draft={editing ? renaming.draft : undefined}
                 onToggle={(next) => {
@@ -788,7 +850,10 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                         setRenaming(null);
                     }
                 }}
-                onStartRename={() => setRenaming({ path: args.path, draft: choice?.name ?? preview?.name ?? "" })}
+                onStartRename={() => setRenaming({
+                    path: args.path,
+                    draft: choice?.renameTo ?? choice?.name ?? preview?.name ?? ""
+                })}
                 onDraftChange={(draft) => setRenaming({ path: args.path, draft })}
                 onCommit={commitRename}
                 onCancel={() => setRenaming(null)}
@@ -796,10 +861,76 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         );
     };
 
+    /** The record's configurables as saving writes them: each name, the name it is renamed to, and its value. */
+    const activeConfigurables = (() => {
+        const record = recordModel[0];
+        if (!configurables || !record) {
+            return [];
+        }
+        return configurableFields(record).flatMap(({ path, field }) => {
+            const choice = configurableChoices[path];
+            const preview = configurablePreviews[path];
+            const literal = typeof field.value === "string" ? field.value.trim() : "";
+            if (!isConfigurable(field, choice) || !preview || preview.kept || preview.error || !literal) {
+                return [];
+            }
+            return [{ path, name: preview.name, shownName: choice?.renameTo ?? preview.name, literal }];
+        });
+    })();
+    const namesToValues = Object.fromEntries(activeConfigurables.flatMap(({ name, shownName, literal }) =>
+        [[name, literal], [shownName, literal]]));
+    const renamedNames = Object.fromEntries(activeConfigurables
+        .filter(({ name, shownName }) => name !== shownName)
+        .map(({ name, shownName }) => [name, shownName]));
+    // The code view shows names where saving writes them; what is typed there stays as typed until the view changes.
+    const codeViewValue = codeDraft
+        ?? (shownSource && shownSource.literal === localExpressionValue
+            ? replaceIdentifiers(shownSource.text, renamedNames)
+            : localExpressionValue);
+
+    /**
+     * Opening an existing connection: a field that uses a configurable shows its value from Config.toml, with
+     * "Make configurable" checked and the configurable's name, as for a new connection.
+     */
+    const adoptExistingConfigurables = async (source: string) => {
+        const record = recordModelRef.current[0];
+        if (!configurables || !record) {
+            return;
+        }
+        setAdoptingConfigurables(true);
+        try {
+            const parameter = field?.key ?? recordTypeField.key;
+            const response = await configurables.preview(source, {});
+            const adopted: FieldConfigurables = {};
+            (response?.configurables ?? [])
+                .filter((preview) => preview.existing && preview.parameter.replace(/^'/, "") === parameter)
+                .forEach((preview) => {
+                    const target = fieldAtPath(record, preview.fieldPath);
+                    if (target && typeof target.value === "string" && target.value.trim() === preview.name) {
+                        target.value = preview.value ?? "";
+                        adopted[preview.fieldPath] = {
+                            name: preview.name, existing: true, declaration: preview.declaration
+                        };
+                    }
+                });
+            if (Object.keys(adopted).length === 0) {
+                return;
+            }
+            setConfigurableChoices((previous) => ({ ...adopted, ...previous }));
+            const model = [record];
+            recordModelRef.current = model;
+            setRecordModel(model);
+            await handleModelChange(model);
+        } finally {
+            setAdoptingConfigurables(false);
+        }
+    };
+
     const switchRecordView = (view: RecordView) => {
         if (view === recordView) {
             return;
         }
+        setCodeDraft(null);
         if (view === "code") {
             // Write what was typed in the form before the code view shows the source.
             debouncedFormValueChange.flush();
@@ -942,7 +1073,12 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         }
     }, [localExpressionValue, debouncedSyncExpressionToModel]);
 
-    const handleExpressionChange = (updatedValue: string, updatedCursorPosition: number) => {
+    const handleExpressionChange = (typedValue: string, updatedCursorPosition: number) => {
+        // While the code view shows configurables' names, the record holds the values they stand for.
+        const updatedValue = replaceIdentifiers(typedValue, namesToValues);
+        if (configurables) {
+            setCodeDraft(typedValue);
+        }
         // Update local expression value when user edits in the ExpressionEditor
         setLocalExpressionValue(updatedValue);
 
@@ -981,10 +1117,10 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
         if (formContext.expressionEditor.retrieveCompletions && field) {
             const property = getPropertyFromFormField({
                 ...field,
-                value: updatedValue
+                value: typedValue
             });
             formContext.expressionEditor.retrieveCompletions(
-                updatedValue,
+                typedValue,
                 property,
                 updatedCursorPosition
             );
@@ -1080,7 +1216,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                             </RightColumnHeader>
                             {recordView === "form" ? (
                                 <FormContainer>
-                                    {recordModel[0] && !hasTooManyFieldsError ? (
+                                    {adoptingConfigurables ? null : recordModel[0] && !hasTooManyFieldsError ? (
                                         <RecordFormView
                                             key={formKey}
                                             record={recordModel[0]}
@@ -1142,7 +1278,7 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                                         <ChipExpressionEditorComponent
                                             completions={formContext.expressionEditor.completions}
                                             onChange={handleExpressionChange}
-                                            value={localExpressionValue}
+                                            value={codeViewValue}
                                             fileName={fileName}
                                             targetLineRange={targetLineRange}
                                             extractArgsFromFunction={wrappedExtractArgsFromFunction}
@@ -1157,6 +1293,18 @@ export function ConfigureRecordPage(props: ConfigureRecordPageProps) {
                                             hideFxButton={true}
                                             containerRef={modalContainerRef}
                                         />
+                                        {activeConfigurables.length > 0 && (
+                                            <ConfigurablesBox data-testid="record-code-configurables">
+                                                <ConfigurablesTitle>Configurables</ConfigurablesTitle>
+                                                {activeConfigurables.map(({ path, shownName, literal }) => (
+                                                    <ConfigurableEntry key={path}>
+                                                        <span>{shownName}</span>
+                                                        <ConfigurableEquals>=</ConfigurableEquals>
+                                                        <ConfigurableValue title={literal}>{literal}</ConfigurableValue>
+                                                    </ConfigurableEntry>
+                                                ))}
+                                            </ConfigurablesBox>
+                                        )}
                                         {formDiagnostics && formDiagnostics.length > 0 && (
                                             <ErrorBanner errorMsg={formDiagnostics.map((d: any) => d.message).join(', ')} />
                                         )}

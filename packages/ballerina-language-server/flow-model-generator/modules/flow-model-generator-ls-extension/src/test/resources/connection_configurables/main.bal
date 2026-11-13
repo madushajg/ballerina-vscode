@@ -20,3 +20,5 @@ type Client record {|
     string url?;
     int retries?;
 |};
+
+configurable string sharedUrl = ?;

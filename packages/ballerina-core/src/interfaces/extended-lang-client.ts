@@ -947,6 +947,12 @@ export interface ConnectionConfigurablePreview {
     kept: boolean;
     /** Why the field can't be given this configurable, if it can't. */
     error?: string;
+    /** For a configurable the connection already uses: its value from Config.toml, as a Ballerina literal. */
+    value?: string;
+    /** Whether the connection already uses this configurable. */
+    existing?: boolean;
+    /** Where an existing configurable is declared, for renaming it across the project. */
+    declaration?: { filePath: string; line: number; offset: number };
 }
 
 export interface ConnectionConfigurablesResponse {
@@ -963,6 +969,8 @@ export interface ConnectionConfigurablesResponse {
 export interface ConnectionConfigurableChoice {
     name?: string;
     keep?: boolean;
+    /** Whether `name` is a configurable the connection already uses; saving keeps using it and sets its value. */
+    existing?: boolean;
 }
 
 /**

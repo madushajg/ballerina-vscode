@@ -106,6 +106,10 @@ const Problem = styled.span({
     color: "var(--vscode-errorForeground)",
 });
 
+const Note = styled.span({
+    color: ThemeColors.ON_SURFACE_VARIANT,
+});
+
 export interface ConfigurableLineProps {
     /** The field's path in the record, which names the line's elements for tests. */
     path: string;
@@ -115,6 +119,8 @@ export interface ConfigurableLineProps {
     name?: string;
     /** Why the field can't get this configurable, as the language server reports it. */
     error?: string;
+    /** Whether the connection already uses this configurable, so renaming it renames it across the project. */
+    existing?: boolean;
     /** Whether the name is being edited; `draft` holds what has been typed. */
     editing: boolean;
     draft?: string;
@@ -130,7 +136,7 @@ export interface ConfigurableLineProps {
  * name, which the user can rename, and a tooltip saying what it does.
  */
 export function ConfigurableLine(props: ConfigurableLineProps) {
-    const { path, on, name, error, editing, draft, onToggle, onStartRename, onDraftChange, onCommit, onCancel } = props;
+    const { path, on, name, error, existing, editing, draft, onToggle, onStartRename, onDraftChange, onCommit, onCancel } = props;
     const invalidDraft = editing && draft !== undefined && !isValidConfigurableName(draft.trim());
 
     return (
@@ -208,6 +214,9 @@ export function ConfigurableLine(props: ConfigurableLineProps) {
                     </Tooltip>
                 </Fixed>
             </Line>
+            {on && editing && existing && !invalidDraft && (
+                <Note>Note: Renaming will update all references across the project when you save.</Note>
+            )}
             {invalidDraft && <Problem role="alert">{INVALID_NAME}</Problem>}
             {on && !invalidDraft && error && <Problem role="alert">{error}</Problem>}
         </Wrapper>

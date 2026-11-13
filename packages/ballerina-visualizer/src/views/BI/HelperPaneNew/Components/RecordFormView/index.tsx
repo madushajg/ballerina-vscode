@@ -170,15 +170,27 @@ function Label({ field, label }: { field: TypeField; label?: string }) {
     );
 }
 
-function DescriptionRow({ field, children }: { field: TypeField; children?: React.ReactNode }) {
-    if (!field.documentation && !children) {
-        return null;
+/**
+ * A field's label, description and mode switch. The switch sits beside the description, as in the side panel; a
+ * field with no description has it beside the label, so no row is left holding the switch alone.
+ */
+function FieldHeader({ field, children }: { field: TypeField; children?: React.ReactNode }) {
+    if (!field.documentation) {
+        return (
+            <FieldRow>
+                <div style={{ flex: 1, minWidth: 0 }}><Label field={field} /></div>
+                {children}
+            </FieldRow>
+        );
     }
     return (
-        <FieldRow>
-            <FieldDescription>{field.documentation}</FieldDescription>
-            {children}
-        </FieldRow>
+        <>
+            <Label field={field} />
+            <FieldRow>
+                <FieldDescription>{field.documentation}</FieldDescription>
+                {children}
+            </FieldRow>
+        </>
     );
 }
 
@@ -214,8 +226,7 @@ function PrimitiveField({ field, path }: { field: TypeField; path: string }) {
 
     return (
         <FieldBlock data-testid={`record-form-field-${path}`}>
-            <Label field={field} />
-            <DescriptionRow field={field}>
+            <FieldHeader field={field}>
                 <ModeToggle
                     primaryLabel={literalMode}
                     secondaryLabel="Expression"
@@ -223,7 +234,7 @@ function PrimitiveField({ field, path }: { field: TypeField; path: string }) {
                     onChange={switchMode}
                     testId={`record-form-mode-${path}`}
                 />
-            </DescriptionRow>
+            </FieldHeader>
             {expression ? (
                 renderExpressionEditor({ id: path, value: source, onChange: write, field })
             ) : literalMode === "Boolean" ? (
@@ -313,8 +324,7 @@ function ChoiceField({ field, path }: { field: TypeField; path: string }) {
 
     return (
         <FieldBlock data-testid={`record-form-field-${path}`}>
-            <Label field={field} />
-            <DescriptionRow field={field}>
+            <FieldHeader field={field}>
                 {canBeExpression && (
                     <ModeToggle
                         primaryLabel="Select"
@@ -324,7 +334,7 @@ function ChoiceField({ field, path }: { field: TypeField; path: string }) {
                         testId={`record-form-mode-${path}`}
                     />
                 )}
-            </DescriptionRow>
+            </FieldHeader>
             {expression ? (
                 renderExpressionEditor({
                     id: path,
@@ -355,8 +365,7 @@ function ExpressionOnlyField({ field, path }: { field: TypeField; path: string }
     const source = typeof field.value === "string" ? field.value : "";
     return (
         <FieldBlock data-testid={`record-form-field-${path}`}>
-            <Label field={field} />
-            <DescriptionRow field={field} />
+            <FieldHeader field={field} />
             {renderExpressionEditor({
                 id: path,
                 value: source,

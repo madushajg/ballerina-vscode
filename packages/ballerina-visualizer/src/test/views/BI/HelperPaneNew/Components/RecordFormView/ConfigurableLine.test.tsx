@@ -131,6 +131,14 @@ describe("ConfigurableLine", () => {
         expect(handlers.onCancel).toHaveBeenCalled();
     });
 
+    it("warns that renaming a configurable the connection already uses renames it across the project", () => {
+        render({ on: true, name: "sfToken", existing: true, editing: true, draft: "salesforceToken" });
+        expect(container.textContent).toContain("Renaming will update all references across the project");
+
+        render({ on: true, name: "sfToken", existing: false, editing: true, draft: "salesforceToken" });
+        expect(container.textContent).not.toContain("Renaming will update all references");
+    });
+
     it("says why a typed name won't do", () => {
         render({ on: true, editing: true, draft: "sales force" });
         expect(container.querySelector("[role=alert]")?.textContent)

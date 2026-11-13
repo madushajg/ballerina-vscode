@@ -27,6 +27,8 @@ import { normalizeIntersections } from "../../../../../../views/BI/HelperPaneNew
 import {
     choicesToSend,
     configurableFields,
+    fieldAtPath,
+    replaceIdentifiers,
     isConfigurable,
     isValidConfigurableName,
 } from "../../../../../../views/BI/HelperPaneNew/Components/RecordFormView/configurables";
@@ -137,6 +139,53 @@ describe("what the language server is told", () => {
         const record = connectionConfig();
         record.fields![1].selected = false;
         expect(choicesToSend(record, { baseUrl: { name: "salesforceUrl" } })).toEqual({ timeout: { keep: true } });
+    });
+});
+
+describe("a configurable the connection already uses", () => {
+    it("is sent by its name, marked as one the connection keeps using", () => {
+        expect(choicesToSend(connectionConfig(), {
+            "auth.token": { name: "sfToken", existing: true, renameTo: "salesforceToken" },
+        })).toEqual({
+            "auth.token": { name: "sfToken", existing: true },
+            baseUrl: { keep: true },
+            timeout: { keep: true },
+        });
+    });
+
+    it("turns back into a value when unchecked", () => {
+        expect(choicesToSend(connectionConfig(), { "auth.token": { name: "sfToken", existing: true, keep: true } })
+            ["auth.token"]).toEqual({ keep: true });
+    });
+});
+
+describe("a field by its path", () => {
+    it("is found through records", () => {
+        expect(fieldAtPath(connectionConfig(), "auth.token")?.name).toBe("token");
+        expect(fieldAtPath(connectionConfig(), "timeout")?.typeName).toBe("decimal");
+    });
+
+    it("is not found when the path names no field", () => {
+        expect(fieldAtPath(connectionConfig(), "auth.secret")).toBeUndefined();
+        expect(fieldAtPath(connectionConfig(), "proxy.host")).toBeUndefined();
+    });
+});
+
+describe("names in the code view", () => {
+    const values = { sfBaseUrl: "\"https://api\"", sfToken: "\"tkn\"" };
+
+    it("stand for their values", () => {
+        expect(replaceIdentifiers("{baseUrl: sfBaseUrl, auth: {token: sfToken}}", values))
+            .toBe("{baseUrl: \"https://api\", auth: {token: \"tkn\"}}");
+    });
+
+    it("are not looked for inside strings, templates or longer names", () => {
+        expect(replaceIdentifiers("{a: \"sfToken\", b: string `sfToken`, c: sfTokenOld}", values))
+            .toBe("{a: \"sfToken\", b: string `sfToken`, c: sfTokenOld}");
+    });
+
+    it("leave source untouched when there are none", () => {
+        expect(replaceIdentifiers("{baseUrl: sfBaseUrl}", {})).toBe("{baseUrl: sfBaseUrl}");
     });
 });
 

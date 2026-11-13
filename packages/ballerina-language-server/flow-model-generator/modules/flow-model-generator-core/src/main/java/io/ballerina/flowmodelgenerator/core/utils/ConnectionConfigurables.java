@@ -30,6 +30,7 @@ import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.NodeParser;
+import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
@@ -50,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,6 +92,9 @@ public class ConnectionConfigurables {
     // The argument rewrite() is working on: its parameter, and what the user chose for its fields.
     private String parameter = "";
     private Map<String, Choice> choices = Map.of();
+    // What an existing configurable is set to, as a Ballerina literal, and where it is declared, by its name.
+    private Function<String, Optional<String>> configuredValue = name -> Optional.empty();
+    private Function<Symbol, Optional<Declaration>> declarationOf = symbol -> Optional.empty();
 
     /**
      * @param connection    the connection's name
@@ -120,10 +125,16 @@ public class ConnectionConfigurables {
      * What the user chose for one field of an argument in the connection form: to keep its literal in source, or the
      * name its configurable takes in place of the generated one.
      *
-     * @param name the configurable's name, or {@code null} for the generated one
-     * @param keep whether the literal stays in source
+     * @param name     the configurable's name, or {@code null} for the generated one
+     * @param keep     whether the literal stays in source
+     * @param existing whether the name is a configurable the connection already uses, which it keeps using, and whose
+     *                 value it sets, even if other code refers to it too
      */
-    public record Choice(String name, boolean keep) {
+    public record Choice(String name, boolean keep, boolean existing) {
+
+        public Choice(String name, boolean keep) {
+            this(name, keep, false);
+        }
 
         /**
          * The choices an argument's property carries in its codedata, keyed by the field's path within the argument
@@ -138,7 +149,8 @@ public class ConnectionConfigurables {
                 if (path instanceof String fieldPath && value instanceof Map<?, ?> choice) {
                     Object name = choice.get("name");
                     choices.put(fieldPath, new Choice(name instanceof String text && !text.isBlank() ? text.strip()
-                            : null, Boolean.TRUE.equals(choice.get("keep"))));
+                            : null, Boolean.TRUE.equals(choice.get("keep")),
+                            Boolean.TRUE.equals(choice.get("existing"))));
                 }
             });
             return choices;
@@ -155,10 +167,43 @@ public class ConnectionConfigurables {
      * @param type      the configurable's type
      * @param exists    whether the module already declares it
      * @param kept      whether the user chose to keep the literal
-     * @param error     why the field can't be given this configurable, or {@code null}
+     * @param error       why the field can't be given this configurable, or {@code null}
+     * @param value       for a configurable the connection already uses, its value as a Ballerina literal, read from
+     *                    Config.toml; {@code null} if it has none there
+     * @param existing    whether the connection already uses this configurable
+     * @param declaration where an existing configurable is declared, for renaming it; {@code null} if unknown
      */
     public record Preview(String parameter, String fieldPath, String name, String type, boolean exists,
-                          boolean kept, String error) {
+                          boolean kept, String error, String value, boolean existing, Declaration declaration) {
+
+        public Preview(String parameter, String fieldPath, String name, String type, boolean exists, boolean kept,
+                       String error) {
+            this(parameter, fieldPath, name, type, exists, kept, error, null, false, null);
+        }
+    }
+
+    /**
+     * Where a configurable is declared: its name's position in its file.
+     *
+     * @param filePath the file's path
+     * @param line     the zero-based line of the name
+     * @param offset   the zero-based column of the name
+     */
+    public record Declaration(String filePath, int line, int offset) {
+    }
+
+    /**
+     * Lets a preview show the configurables the connection already uses: their values and where they are declared.
+     *
+     * @param configuredValue an existing configurable's value as a Ballerina literal, by its name
+     * @param declarationOf   where a configurable is declared
+     * @return this
+     */
+    public ConnectionConfigurables withExisting(Function<String, Optional<String>> configuredValue,
+                                                Function<Symbol, Optional<Declaration>> declarationOf) {
+        this.configuredValue = configuredValue;
+        this.declarationOf = declarationOf;
+        return this;
     }
 
     /**
@@ -290,7 +335,7 @@ public class ConnectionConfigurables {
             String name;
             Symbol existing;
             if (choice != null && choice.name() != null) {
-                String problem = chosenNameProblem(choice.name(), kind.get());
+                String problem = chosenNameProblem(choice.name(), kind.get(), choice.existing());
                 if (problem != null) {
                     refuse(path, choice.name(), configType, problem);
                     return;
@@ -326,7 +371,27 @@ public class ConnectionConfigurables {
             configurables.add(new Configurable(name, valueOf(name), configType, literal.toSourceCode().strip(),
                     existing != null));
             if (preview) {
-                previews.add(new Preview(parameter, path, valueOf(name), configType, existing != null, false, null));
+                boolean alreadyUsed = choice != null && choice.existing();
+                previews.add(new Preview(parameter, path, valueOf(name), configType, existing != null, false, null,
+                        null, alreadyUsed, alreadyUsed && existing != null ? declarationOf.apply(existing).orElse(null)
+                        : null));
+            }
+        } else if (value instanceof SimpleNameReferenceNode reference) {
+            // A configurable the connection already uses: its name is taken, and a preview shows its value.
+            Symbol symbol = moduleSymbols.get(valueOf(reference.name().text()));
+            if (symbol == null || !isConfigurable(symbol)) {
+                return;
+            }
+            String configType = CONFIGURABLE_TYPES.get(
+                    CommonUtils.getRawType(((VariableSymbol) symbol).typeDescriptor()).typeKind());
+            if (configType == null) {
+                return;
+            }
+            String name = valueOf(reference.name().text());
+            usedNames.add(name);
+            if (preview) {
+                previews.add(new Preview(parameter, path, name, configType, true, false, null,
+                        configuredValue.apply(name).orElse(null), true, declarationOf.apply(symbol).orElse(null)));
             }
         } else if (value instanceof MappingConstructorExpressionNode mapping) {
             recordOf(rawType, mapping).ifPresent(record -> mapping.fields().forEach(field -> {
@@ -348,7 +413,7 @@ public class ConnectionConfigurables {
      * Why a name the user gave a field's configurable can't be used, or {@code null} if it can. Unlike a generated
      * name it is never numbered: the user chose it, so a clash is theirs to resolve.
      */
-    private String chosenNameProblem(String name, TypeDescKind kind) {
+    private String chosenNameProblem(String name, TypeDescKind kind, boolean alreadyUsed) {
         if (!PLAIN_IDENTIFIER.matcher(name).matches()) {
             return "'%s' is not a valid name. Use letters, digits and _, and don't start with a digit."
                     .formatted(name);
@@ -360,7 +425,9 @@ public class ConnectionConfigurables {
             return "Two of this connection's fields would both be configured by '%s'.".formatted(name);
         }
         Symbol existing = moduleSymbols.get(name);
-        if (existing != null && (!isConfigurableOf(existing, kind) || referenced.test(existing))) {
+        // Other code may refer to a configurable the connection already uses; one it doesn't use yet would change
+        // under that code.
+        if (existing != null && (!isConfigurableOf(existing, kind) || (referenced.test(existing) && !alreadyUsed))) {
             return "'%s' is already used in this module. Choose another name.".formatted(name);
         }
         return null;
@@ -522,6 +589,23 @@ public class ConnectionConfigurables {
     private static String sourceName(String name) {
         String value = valueOf(name);
         return PLAIN_IDENTIFIER.matcher(value).matches() ? CommonUtil.escapeReservedKeyword(value) : name;
+    }
+
+    /**
+     * Text as a Ballerina string literal: what the connection form shows for a configurable's string value.
+     */
+    public static String ballerinaStringLiteral(String text) {
+        StringBuilder literal = new StringBuilder("\"");
+        text.codePoints().forEach(codePoint -> literal.append(switch (codePoint) {
+            case '"' -> "\\\"";
+            case '\\' -> "\\\\";
+            case '\t' -> "\\t";
+            case '\n' -> "\\n";
+            case '\r' -> "\\r";
+            default -> Character.isISOControl(codePoint) ? "\\u{%X}".formatted(codePoint)
+                    : Character.toString(codePoint);
+        }));
+        return literal.append('"').toString();
     }
 
     private static String tomlChars(String value) {
