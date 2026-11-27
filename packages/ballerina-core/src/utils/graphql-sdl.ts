@@ -71,6 +71,32 @@ export function toGraphqlArgs(parameters: Member[]): GraphqlSdlArgument[] {
 }
 
 /**
+ * What a diagram row puts after a field's SDL type when its resolver can return an error, e.g. `Person|error`.
+ * GraphQL has no error type, so this is a design-view marker rather than SDL: it is kept out of the field's SDL
+ * definition and shown apart from the type.
+ */
+export const GRAPHQL_ERROR_SUFFIX = "|error";
+
+/**
+ * What a resolver error does to the response, for a field whose resolver can return one. The error is listed in the
+ * response's `errors` and the field resolves to null; a non-null field cannot hold that null, so it moves up to the
+ * nearest nullable parent, which for a root operation field is the response's whole `data`.
+ *
+ * @param type   the field's SDL type, e.g. `Person!`
+ * @param parent the object type holding the field, or undefined for a root operation field
+ */
+export function describeGraphqlResolverError(type: string, parent?: string): string {
+    if (!type.endsWith("!")) {
+        return "Can return an error. The field is then null and the error is listed in the response's errors.";
+    }
+    const lost = parent
+        ? `the ${parent} holding it null too, and further up through non-null parents`
+        : "the response's whole data null";
+    return `Can return an error. As the field is non-null, an error makes ${lost}. `
+        + "Make the field nullable to keep the rest of the response.";
+}
+
+/**
  * The argument list shown next to a field name in a diagram, e.g. `(id: ID!, first: Int! = 10)`.
  */
 export function formatInlineGraphqlArgs(args: GraphqlSdlArgument[]): string {

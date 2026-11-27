@@ -21,6 +21,7 @@ import {
     GraphqlSdlArgument,
     GraphqlSdlField,
     MAX_INLINE_GRAPHQL_ARGS,
+    describeGraphqlResolverError,
     formatGraphqlFieldDefinition,
     formatInlineGraphqlArgs,
     toGraphqlArgs,
@@ -92,6 +93,33 @@ describe("formatGraphqlFieldDefinition", () => {
             args: [], type: "String!", deprecated: true, description: "Say hello.",
         };
         expect(formatGraphqlFieldDefinition("hello", field)).toBe("hello: String! @deprecated\n\nSay hello.");
+    });
+});
+
+describe("describeGraphqlResolverError", () => {
+    const NULLABLE = ["Profile", "[Book!]", "[Book]", "(Book|Author)", "String"];
+    const NON_NULL = ["Profile!", "[Book!]!", "[Book]!", "(Book|Author)!", "String!"];
+    const PARENTS = [undefined, "Book"];
+
+    test.each(NULLABLE.flatMap((type) => PARENTS.map((parent) => [type, parent])))(
+        "keeps an error on nullable %s to the field itself (parent %s)",
+        (type, parent) => {
+            const note = describeGraphqlResolverError(type, parent);
+            expect(note).toContain("The field is then null");
+            expect(note).not.toContain("non-null");
+        }
+    );
+
+    test.each(NON_NULL)("says an error on a non-null root field %s loses the whole data", (type) => {
+        const note = describeGraphqlResolverError(type);
+        expect(note).toContain("non-null");
+        expect(note).toContain("whole data null");
+    });
+
+    test.each(NON_NULL)("says an error on a non-null object field %s nulls the object holding it", (type) => {
+        const note = describeGraphqlResolverError(type, "Book");
+        expect(note).toContain("the Book holding it null");
+        expect(note).not.toContain("whole data");
     });
 });
 

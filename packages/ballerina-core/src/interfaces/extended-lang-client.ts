@@ -1898,6 +1898,8 @@ export interface TypeFunctionModel {
     isGraphqlId?: boolean;
     /** GraphQL type of the exposed field in SDL notation (e.g. `[Book!]!`); only set in the GraphQL type model. */
     graphqlType?: string;
+    /** Whether the field's resolver can return an error, which its SDL type cannot show; only set when true. */
+    graphqlReturnsError?: boolean;
     properties?: { [key: string]: any };
     codedata?: CodeData;
 }

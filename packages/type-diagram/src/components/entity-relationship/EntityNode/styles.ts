@@ -141,6 +141,20 @@ export const GraphqlDefinition: React.FC<any> = styled.div`
     white-space: pre;
 `;
 
+// A field's `|error`: muted, so the SDL type stays what the row shows.
+export const GraphqlErrorSuffix: React.FC<any> = styled.span`
+    opacity: 0.6;
+`;
+
+// Under the SDL definition, which keeps its own lines; this note wraps.
+export const GraphqlErrorNote: React.FC<any> = styled.div`
+    font-size: 12px;
+    margin-top: 8px;
+    max-width: 320px;
+    opacity: 0.8;
+    white-space: normal;
+`;
+
 export const AttributeType: React.FC<any> = styled.span`
     background-color: ${ThemeColors.SURFACE_CONTAINER};
     border-radius: 3px;

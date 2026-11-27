@@ -44,6 +44,9 @@ import java.util.Map;
  * @param imports       Imports of the member.
  * @param graphqlType   GraphQL type of the field the function exposes in SDL notation, set only for the GraphQL
  *                      type model.
+ * @param graphqlReturnsError Whether the resolver behind that GraphQL field can return an error, which the SDL type
+ *                      cannot show. Set only for the GraphQL type model, and only when true, so it is left out
+ *                      otherwise.
  * @param codedata      Source location of the function definition, when known.
  * @since 1.0.0
  */
@@ -62,6 +65,7 @@ public record Function(
         Map<String, Property> properties,
         Map<String, String> imports,
         String graphqlType,
+        Boolean graphqlReturnsError,
         Codedata codedata
 ) {
     public enum FunctionKind {
@@ -82,6 +86,7 @@ public record Function(
         private String returnTypeName;
         private boolean isGraphqlId;
         private String graphqlType;
+        private Boolean graphqlReturnsError;
         private List<String> refs;
         private FormBuilder<FunctionBuilder> formBuilder;
         private ModuleInfo moduleInfo;
@@ -163,6 +168,11 @@ public record Function(
             return this;
         }
 
+        public FunctionBuilder graphqlReturnsError(boolean graphqlReturnsError) {
+            this.graphqlReturnsError = graphqlReturnsError ? Boolean.TRUE : null;
+            return this;
+        }
+
         public FunctionBuilder refs(List<String> refs) {
             this.refs = refs;
             return this;
@@ -192,6 +202,7 @@ public record Function(
                     formBuilder == null ? null : formBuilder.build(),
                     imports != null ? Map.copyOf(imports) : null,
                     graphqlType,
+                    graphqlReturnsError,
                     lineRange == null ? null : new Codedata.Builder<>(null).lineRange(lineRange).build()
             );
         }

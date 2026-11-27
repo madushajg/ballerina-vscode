@@ -855,7 +855,8 @@ public class TypeTransformer {
         MethodSymbol graphqlField = graphqlTypes && functionSymbol instanceof MethodSymbol method
                 && GraphqlTypeMapper.fieldName(method) != null ? method : null;
         if (graphqlField != null) {
-            functionBuilder.graphqlType(GraphqlTypeMapper.toFieldTypeSdl(graphqlField));
+            functionBuilder.graphqlType(GraphqlTypeMapper.toFieldTypeSdl(graphqlField))
+                    .graphqlReturnsError(GraphqlTypeMapper.returnsError(graphqlField));
         }
 
         // params

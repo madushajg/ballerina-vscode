@@ -18,9 +18,17 @@
 
 import React from "react";
 import { waitFor } from "@testing-library/dom";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { Member, Type, TypeFunctionModel, formatInlineGraphqlArgs, toGraphqlArgs } from "@wso2/ballerina-core";
+import {
+    GRAPHQL_ERROR_SUFFIX,
+    Member,
+    Type,
+    TypeFunctionModel,
+    describeGraphqlResolverError,
+    formatInlineGraphqlArgs,
+    toGraphqlArgs,
+} from "@wso2/ballerina-core";
 import { TypeDiagram } from "../Diagram";
 
 // Captured `typesManager/getGraphqlType` output, copied verbatim from the language server test
@@ -104,6 +112,43 @@ describe("GraphQL diagram", () => {
         await waitFor(() => expect(findDefinition(second.name)).toBeVisible());
         expect(findDefinition(first.name)).not.toBeVisible();
     }, 15000);
+
+    describe("a field whose resolver can return an error", () => {
+        const errorNotes = () => screen.queryAllByTestId("graphql-error-note").map((note) => note.textContent);
+
+        test("shows a muted |error after its type, keeps its SDL definition plain, and says what an error does",
+            async () => {
+                const failing = { ...operations[0], graphqlReturnsError: true };
+                await renderGraphqlDiagram({ ...rootService, functions: [failing, ...operations.slice(1)] });
+
+                const row = findFieldRow(rowText(failing) + GRAPHQL_ERROR_SUFFIX);
+                expect(row).toBeDefined();
+                expect(within(row as HTMLElement).getByText(GRAPHQL_ERROR_SUFFIX).tagName).toBe("SPAN");
+                expect(findDefinition(failing.name).textContent).not.toContain("error");
+                expect(errorNotes()).toEqual([describeGraphqlResolverError(failing.graphqlType)]);
+                for (const operation of operations.slice(1)) {
+                    expect(findFieldRow(rowText(operation))).toBeDefined();
+                }
+            }, 15000);
+
+        test("on a nullable root field, says the error stays on the field", async () => {
+            const failing = { ...operations[0], graphqlType: operations[0].graphqlType.replace(/!$/, ""),
+                graphqlReturnsError: true };
+            await renderGraphqlDiagram({ ...rootService, functions: [failing, ...operations.slice(1)] });
+            expect(errorNotes()).toEqual([describeGraphqlResolverError(failing.graphqlType)]);
+            expect(errorNotes()[0]).toContain("The field is then null");
+        }, 15000);
+
+        test("on an object field, names the object an error nulls", async () => {
+            const owner = refs.find((ref) => ref.functions?.some((fn) => (fn as TypeFunctionModel).graphqlType));
+            const [field, ...rest] = owner.functions as TypeFunctionModel[];
+            const failingOwner = { ...owner, functions: [{ ...field, graphqlReturnsError: true }, ...rest] };
+            await renderGraphqlDiagram(rootService, refs.map((ref) => ref === owner ? failingOwner : ref));
+
+            expect(findFieldRow(field.name + field.graphqlType + GRAPHQL_ERROR_SUFFIX)).toBeDefined();
+            expect(errorNotes()).toEqual([describeGraphqlResolverError(field.graphqlType, owner.name)]);
+        }, 15000);
+    });
 
     test("an older language server without GraphQL types still renders every field with its Ballerina type", async () => {
         const strip = (value: unknown) => JSON.parse(JSON.stringify(value), (key, v) => key === "graphqlType" ? undefined : v);

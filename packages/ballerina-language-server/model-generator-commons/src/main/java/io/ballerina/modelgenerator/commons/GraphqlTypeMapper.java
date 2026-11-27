@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,6 +123,35 @@ public final class GraphqlTypeMapper {
         return functionType.returnTypeDescriptor()
                 .map(returnType -> toSdl(isSubscription ? unwrapStream(returnType) : returnType, isId))
                 .orElse(null);
+    }
+
+    /**
+     * Returns whether the resolver behind a field can fail, i.e. its return type has an error member. The schema has
+     * no notion of this (an error surfaces in the response's {@code errors} list, so {@code toFieldTypeSdl} drops it),
+     * but a design view of the service still shows it. For a subscription, an error the stream can end with
+     * ({@code stream<T, error?>}) counts as well as one around it ({@code stream<T>|error}), matching the field
+     * form's Returns Error flag.
+     */
+    public static boolean returnsError(MethodSymbol method) {
+        Optional<TypeSymbol> returnType = method.typeDescriptor().returnTypeDescriptor();
+        if (returnType.isEmpty()) {
+            return false;
+        }
+        if (hasErrorMember(returnType.get())) {
+            return true;
+        }
+        if (!(method instanceof ResourceMethodSymbol) || !isSubscriptionAccessor(method.getName().orElse(""))) {
+            return false;
+        }
+        TypeSymbol rawType = CommonUtils.getRawType(returnType.get());
+        if (rawType instanceof UnionTypeSymbol union) {
+            List<TypeSymbol> members = valueMembers(union);
+            if (members.size() == 1) {
+                rawType = CommonUtils.getRawType(members.get(0));
+            }
+        }
+        return rawType instanceof StreamTypeSymbol streamType
+                && hasErrorMember(streamType.completionValueTypeParameter());
     }
 
     /**
@@ -321,6 +351,19 @@ public final class GraphqlTypeMapper {
                     .anyMatch(member -> CommonUtils.getRawType(member).typeKind() == TypeDescKind.NIL);
         }
         return rawType.typeKind() == TypeDescKind.NIL;
+    }
+
+    /**
+     * Whether a type has an error member, looking through aliases the same way as {@link #admitsNil}, so a custom
+     * error type (e.g. {@code Book|NotFoundError}) and an error inside an alias both count.
+     */
+    private static boolean hasErrorMember(TypeSymbol type) {
+        TypeSymbol rawType = CommonUtils.getRawType(type);
+        if (rawType instanceof UnionTypeSymbol union) {
+            return union.memberTypeDescriptors().stream()
+                    .anyMatch(member -> CommonUtils.getRawType(member).typeKind() == TypeDescKind.ERROR);
+        }
+        return rawType.typeKind() == TypeDescKind.ERROR;
     }
 
     private static String withoutNonNull(String type) {

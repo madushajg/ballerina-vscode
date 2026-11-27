@@ -471,6 +471,7 @@
           }
         },
         "graphqlType": "Contact!",
+        "graphqlReturnsError": true,
         "codedata": {
           "lineRange": {
             "fileName": "nullable_service.bal",

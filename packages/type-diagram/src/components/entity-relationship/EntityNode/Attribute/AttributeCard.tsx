@@ -20,7 +20,9 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { DiagramEngine, PortModel } from '@projectstorm/react-diagrams';
 import {
     Member,
+    GRAPHQL_ERROR_SUFFIX,
     TypeFunctionModel,
+    describeGraphqlResolverError,
     formatGraphqlFieldDefinition,
     formatInlineGraphqlArgs,
     toGraphqlArgs,
@@ -36,6 +38,8 @@ import {
     AttributeType,
     GraphqlArgs,
     GraphqlDefinition,
+    GraphqlErrorNote,
+    GraphqlErrorSuffix,
     GRAPHQL_ROW_TOOLTIP_CONTAINER_SX,
 } from '../styles';
 import { CtrlClickGo2Source, DiagramContext } from '../../../common';
@@ -66,9 +70,15 @@ export function AttributeWidget(props: AttributeProps) {
 
     const portName = getAttributePortName(node.entityObject, attribute);
 
-    // The GraphQL type model carries each field's GraphQL type; show the schema the client sees.
+    // The GraphQL type model carries each field's GraphQL type; show the schema the client sees. A field whose resolver
+    // can return an error, which the schema cannot show, gets a muted `|error` and a note on what an error does; the
+    // SDL definition stays plain SDL.
     const graphqlType = attribute.graphqlType;
+    const graphqlReturnsError = !!graphqlType && 'graphqlReturnsError' in attribute && !!attribute.graphqlReturnsError;
     const attributeType: string = graphqlType ?? getAttributeType(attribute);// TODO: FIX for anynnymous records
+    const graphqlErrorNote = graphqlReturnsError
+        ? describeGraphqlResolverError(graphqlType, node.isGraphqlRoot ? undefined : node.entityObject?.name)
+        : undefined;
     const graphqlName = graphqlType ? toGraphqlName(attribute.name) : undefined;
     const graphqlArgs = graphqlType && 'parameters' in attribute ? toGraphqlArgs(attribute.parameters) : [];
     const graphqlDefinition = graphqlType
@@ -189,6 +199,7 @@ export function AttributeWidget(props: AttributeProps) {
                     onClick={hasLinkedNode ? onClickOnType : undefined}
                 >
                     {attributeType}
+                    {graphqlReturnsError && <GraphqlErrorSuffix>{GRAPHQL_ERROR_SUFFIX}</GraphqlErrorSuffix>}
                 </AttributeType>
             }
             {node.entityObject?.codedata?.node === 'ENUM' && ('defaultValue' in attribute && attribute.defaultValue) &&
@@ -218,7 +229,14 @@ export function AttributeWidget(props: AttributeProps) {
                 re-renders on hover, so they only appeared intermittently. */}
             {graphqlDefinition ? (
                 <Tooltip
-                    content={<GraphqlDefinition data-testid="graphql-definition">{graphqlDefinition}</GraphqlDefinition>}
+                    content={
+                        <>
+                            <GraphqlDefinition data-testid="graphql-definition">{graphqlDefinition}</GraphqlDefinition>
+                            {graphqlErrorNote && (
+                                <GraphqlErrorNote data-testid="graphql-error-note">{graphqlErrorNote}</GraphqlErrorNote>
+                            )}
+                        </>
+                    }
                     containerSx={GRAPHQL_ROW_TOOLTIP_CONTAINER_SX}
                 >
                     {row}

@@ -1,0 +1,2915 @@
+{
+  "filePath": "test_pack1/error_service.bal",
+  "position": {
+    "line": 20,
+    "offset": 0
+  },
+  "description": "Get GraphQL service whose resolvers return errors in each supported shape",
+  "type": {
+    "name": "/books",
+    "editable": true,
+    "metadata": {
+      "label": "/books",
+      "description": ""
+    },
+    "codedata": {
+      "node": "SERVICE_DECLARATION",
+      "lineRange": {
+        "fileName": "error_service.bal",
+        "startLine": {
+          "line": 20,
+          "offset": 0
+        },
+        "endLine": {
+          "line": 61,
+          "offset": 1
+        }
+      }
+    },
+    "properties": {
+      "name": {
+        "metadata": {
+          "label": "Type name",
+          "description": "Unique name to identify the type"
+        },
+        "types": [
+          {
+            "fieldType": "IDENTIFIER",
+            "selected": true
+          }
+        ],
+        "value": "/books",
+        "optional": false,
+        "editable": false,
+        "advanced": false,
+        "hidden": false
+      },
+      "qualifiers": {
+        "metadata": {
+          "label": "Type Qualifiers",
+          "description": "Qualifiers of the type"
+        },
+        "types": [
+          {
+            "fieldType": "MULTIPLE_SELECT",
+            "selected": true
+          }
+        ],
+        "value": [],
+        "optional": true,
+        "editable": true,
+        "advanced": true,
+        "hidden": false
+      },
+      "isReadOnly": {
+        "metadata": {
+          "label": "readonly",
+          "description": "Is this readonly"
+        },
+        "types": [
+          {
+            "fieldType": "FLAG",
+            "selected": true
+          }
+        ],
+        "value": "false",
+        "optional": true,
+        "editable": true,
+        "advanced": false,
+        "hidden": false
+      },
+      "isArray": {
+        "metadata": {
+          "label": "Is array type",
+          "description": "Is this type an array or list value"
+        },
+        "types": [
+          {
+            "fieldType": "FLAG",
+            "selected": true
+          }
+        ],
+        "value": "false",
+        "optional": true,
+        "editable": true,
+        "advanced": true,
+        "hidden": false
+      },
+      "arraySize": {
+        "metadata": {
+          "label": "Size of the array",
+          "description": "Array dimensions"
+        },
+        "types": [
+          {
+            "fieldType": "TEXT",
+            "selected": true
+          }
+        ],
+        "value": "",
+        "optional": false,
+        "editable": false,
+        "advanced": false,
+        "hidden": false
+      }
+    },
+    "members": [],
+    "functions": [
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "book",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "UNION"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [
+                "error"
+              ],
+              "type": "error",
+              "typeName": "error",
+              "name": "error",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "Book|error",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 22,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 24,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "maybeBook",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "UNION"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [],
+              "type": {
+                "editable": false,
+                "codedata": {
+                  "node": "UNION"
+                },
+                "properties": {
+                  "isArray": {
+                    "metadata": {
+                      "label": "Is array type",
+                      "description": "Is this type an array or list value"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "FLAG",
+                        "selected": true
+                      }
+                    ],
+                    "value": "false",
+                    "optional": true,
+                    "editable": true,
+                    "advanced": true,
+                    "hidden": false
+                  },
+                  "arraySize": {
+                    "metadata": {
+                      "label": "Size of the array",
+                      "description": "Array dimensions"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "TEXT",
+                        "selected": true
+                      }
+                    ],
+                    "value": "",
+                    "optional": false,
+                    "editable": false,
+                    "advanced": false,
+                    "hidden": false
+                  }
+                },
+                "members": [
+                  {
+                    "kind": "TYPE",
+                    "refs": [
+                      "error"
+                    ],
+                    "type": "error",
+                    "typeName": "error",
+                    "name": "error",
+                    "optional": false,
+                    "readonly": false,
+                    "isGraphqlId": false,
+                    "selected": false
+                  },
+                  {
+                    "kind": "TYPE",
+                    "refs": [],
+                    "type": "()",
+                    "typeName": "()",
+                    "name": "()",
+                    "optional": false,
+                    "readonly": false,
+                    "isGraphqlId": false,
+                    "selected": false
+                  }
+                ],
+                "allowAdditionalFields": false
+              },
+              "typeName": "error?",
+              "name": "error?",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "Book|error?",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 26,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 28,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "books",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "UNION"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [],
+              "type": {
+                "editable": false,
+                "codedata": {
+                  "node": "ARRAY"
+                },
+                "properties": {
+                  "isArray": {
+                    "metadata": {
+                      "label": "Is array type",
+                      "description": "Is this type an array or list value"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "FLAG",
+                        "selected": true
+                      }
+                    ],
+                    "value": "true",
+                    "optional": true,
+                    "editable": true,
+                    "advanced": true,
+                    "hidden": false
+                  },
+                  "arraySize": {
+                    "metadata": {
+                      "label": "Size of the array",
+                      "description": "Array dimensions"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "TEXT",
+                        "selected": true
+                      }
+                    ],
+                    "value": "",
+                    "optional": true,
+                    "editable": true,
+                    "advanced": true,
+                    "hidden": false
+                  }
+                },
+                "members": [
+                  {
+                    "kind": "TYPE",
+                    "refs": [
+                      "Book"
+                    ],
+                    "type": "Book",
+                    "typeName": "Book",
+                    "name": "Book",
+                    "optional": false,
+                    "readonly": false,
+                    "isGraphqlId": false,
+                    "selected": false
+                  }
+                ],
+                "allowAdditionalFields": false
+              },
+              "typeName": "Book[]",
+              "name": "Book[]",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [
+                "error"
+              ],
+              "type": "error",
+              "typeName": "error",
+              "name": "error",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "Book[]|error",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "[Book!]!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 30,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 32,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [
+          {
+            "kind": "FIELD",
+            "refs": [],
+            "type": "string",
+            "typeName": "string",
+            "name": "title",
+            "optional": false,
+            "readonly": false,
+            "isGraphqlId": false,
+            "selected": false,
+            "graphqlType": "String!"
+          }
+        ],
+        "kind": "RESOURCE",
+        "name": "byTitle",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "UNION"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [
+                "BookNotFound"
+              ],
+              "type": "BookNotFound",
+              "typeName": "BookNotFound",
+              "name": "BookNotFound",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "Book|BookNotFound",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 34,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 36,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "aliased",
+        "description": "",
+        "returnType": "BookOrError",
+        "returnTypeName": "BookOrError",
+        "isGraphqlId": false,
+        "refs": [
+          "BookOrError"
+        ],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 38,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 40,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "plain",
+        "description": "",
+        "returnType": "Book",
+        "returnTypeName": "Book",
+        "isGraphqlId": false,
+        "refs": [
+          "Book"
+        ],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 42,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 44,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "get",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "shelf",
+        "description": "",
+        "returnType": "Shelf",
+        "returnTypeName": "Shelf",
+        "isGraphqlId": false,
+        "refs": [
+          "Shelf"
+        ],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Shelf!",
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 46,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 48,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "qualifiers": [
+          "ISOLATED",
+          "REMOTE"
+        ],
+        "parameters": [
+          {
+            "kind": "FIELD",
+            "refs": [],
+            "type": "string",
+            "typeName": "string",
+            "name": "title",
+            "optional": false,
+            "readonly": false,
+            "isGraphqlId": false,
+            "selected": false,
+            "graphqlType": "String!"
+          }
+        ],
+        "kind": "REMOTE",
+        "name": "addBook",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "UNION"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [
+                "error"
+              ],
+              "type": "error",
+              "typeName": "error",
+              "name": "error",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "Book|error",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 50,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 52,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "subscribe",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "endsWithError",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "STREAM"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            },
+            {
+              "kind": "TYPE",
+              "refs": [],
+              "type": {
+                "editable": false,
+                "codedata": {
+                  "node": "UNION"
+                },
+                "properties": {
+                  "isArray": {
+                    "metadata": {
+                      "label": "Is array type",
+                      "description": "Is this type an array or list value"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "FLAG",
+                        "selected": true
+                      }
+                    ],
+                    "value": "false",
+                    "optional": true,
+                    "editable": true,
+                    "advanced": true,
+                    "hidden": false
+                  },
+                  "arraySize": {
+                    "metadata": {
+                      "label": "Size of the array",
+                      "description": "Array dimensions"
+                    },
+                    "types": [
+                      {
+                        "fieldType": "TEXT",
+                        "selected": true
+                      }
+                    ],
+                    "value": "",
+                    "optional": false,
+                    "editable": false,
+                    "advanced": false,
+                    "hidden": false
+                  }
+                },
+                "members": [
+                  {
+                    "kind": "TYPE",
+                    "refs": [
+                      "error"
+                    ],
+                    "type": "error",
+                    "typeName": "error",
+                    "name": "error",
+                    "optional": false,
+                    "readonly": false,
+                    "isGraphqlId": false,
+                    "selected": false
+                  },
+                  {
+                    "kind": "TYPE",
+                    "refs": [],
+                    "type": "()",
+                    "typeName": "()",
+                    "name": "()",
+                    "optional": false,
+                    "readonly": false,
+                    "isGraphqlId": false,
+                    "selected": false
+                  }
+                ],
+                "allowAdditionalFields": false
+              },
+              "typeName": "error?",
+              "name": "error?",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "stream<Book, error?>",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "graphqlReturnsError": true,
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 54,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 56,
+              "offset": 5
+            }
+          }
+        }
+      },
+      {
+        "accessor": "subscribe",
+        "qualifiers": [
+          "ISOLATED",
+          "RESOURCE"
+        ],
+        "parameters": [],
+        "kind": "RESOURCE",
+        "name": "newBooks",
+        "description": "",
+        "returnType": {
+          "editable": false,
+          "codedata": {
+            "node": "STREAM"
+          },
+          "properties": {
+            "isArray": {
+              "metadata": {
+                "label": "Is array type",
+                "description": "Is this type an array or list value"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": true,
+              "hidden": false
+            },
+            "arraySize": {
+              "metadata": {
+                "label": "Size of the array",
+                "description": "Array dimensions"
+              },
+              "types": [
+                {
+                  "fieldType": "TEXT",
+                  "selected": true
+                }
+              ],
+              "value": "",
+              "optional": false,
+              "editable": false,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "members": [
+            {
+              "kind": "TYPE",
+              "refs": [
+                "Book"
+              ],
+              "type": "Book",
+              "typeName": "Book",
+              "name": "Book",
+              "optional": false,
+              "readonly": false,
+              "isGraphqlId": false,
+              "selected": false
+            }
+          ],
+          "allowAdditionalFields": false
+        },
+        "returnTypeName": "stream<Book>",
+        "isGraphqlId": false,
+        "refs": [],
+        "properties": {
+          "isPrivate": {
+            "metadata": {
+              "label": "private",
+              "description": "Is this private"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isPublic": {
+            "metadata": {
+              "label": "public",
+              "description": "Make visible across the project"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "false",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          },
+          "isIsolated": {
+            "metadata": {
+              "label": "isolated",
+              "description": "Is this isolated"
+            },
+            "types": [
+              {
+                "fieldType": "FLAG",
+                "selected": true
+              }
+            ],
+            "value": "true",
+            "optional": true,
+            "editable": true,
+            "advanced": false,
+            "hidden": false
+          }
+        },
+        "graphqlType": "Book!",
+        "codedata": {
+          "lineRange": {
+            "fileName": "error_service.bal",
+            "startLine": {
+              "line": 58,
+              "offset": 4
+            },
+            "endLine": {
+              "line": 60,
+              "offset": 5
+            }
+          }
+        }
+      }
+    ],
+    "allowAdditionalFields": false
+  },
+  "refs": [
+    {
+      "name": "BookNotFound",
+      "editable": true,
+      "metadata": {
+        "label": "BookNotFound",
+        "description": ""
+      },
+      "codedata": {
+        "node": "ERROR",
+        "lineRange": {
+          "fileName": "error_service.bal",
+          "startLine": {
+            "line": 6,
+            "offset": 5
+          },
+          "endLine": {
+            "line": 6,
+            "offset": 17
+          }
+        }
+      },
+      "properties": {
+        "name": {
+          "metadata": {
+            "label": "Type name",
+            "description": "Unique name to identify the type"
+          },
+          "types": [
+            {
+              "fieldType": "IDENTIFIER",
+              "selected": true
+            }
+          ],
+          "value": "BookNotFound",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "isPublic": {
+          "metadata": {
+            "label": "public",
+            "description": "Make visible across the project"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "description": {
+          "metadata": {
+            "label": "Type description",
+            "description": "Detailed description about the type"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isArray": {
+          "metadata": {
+            "label": "Is array type",
+            "description": "Is this type an array or list value"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "arraySize": {
+          "metadata": {
+            "label": "Size of the array",
+            "description": "Array dimensions"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        }
+      },
+      "members": [
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": {
+            "editable": false,
+            "codedata": {
+              "node": "MAP"
+            },
+            "properties": {
+              "isArray": {
+                "metadata": {
+                  "label": "Is array type",
+                  "description": "Is this type an array or list value"
+                },
+                "types": [
+                  {
+                    "fieldType": "FLAG",
+                    "selected": true
+                  }
+                ],
+                "value": "false",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              },
+              "arraySize": {
+                "metadata": {
+                  "label": "Size of the array",
+                  "description": "Array dimensions"
+                },
+                "types": [
+                  {
+                    "fieldType": "TEXT",
+                    "selected": true
+                  }
+                ],
+                "value": "",
+                "optional": false,
+                "editable": false,
+                "advanced": false,
+                "hidden": false
+              }
+            },
+            "members": [
+              {
+                "kind": "TYPE",
+                "refs": [
+                  "ballerina/lang.value:Cloneable"
+                ],
+                "type": "value:Cloneable",
+                "typeName": "value:Cloneable",
+                "name": "value:Cloneable",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "imports": {
+                  "value": "ballerina/lang.value:0.0.0"
+                },
+                "selected": false
+              }
+            ],
+            "allowAdditionalFields": false
+          },
+          "typeName": "map<value:Cloneable>",
+          "name": "map<value:Cloneable>",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "imports": {
+            "value": "ballerina/lang.value:0.0.0"
+          },
+          "selected": false
+        }
+      ],
+      "annotationAttachments": [],
+      "allowAdditionalFields": false
+    },
+    {
+      "name": "BookOrError",
+      "editable": true,
+      "metadata": {
+        "label": "BookOrError",
+        "description": ""
+      },
+      "codedata": {
+        "node": "UNION",
+        "lineRange": {
+          "fileName": "error_service.bal",
+          "startLine": {
+            "line": 8,
+            "offset": 5
+          },
+          "endLine": {
+            "line": 8,
+            "offset": 16
+          }
+        }
+      },
+      "properties": {
+        "name": {
+          "metadata": {
+            "label": "Type name",
+            "description": "Unique name to identify the type"
+          },
+          "types": [
+            {
+              "fieldType": "IDENTIFIER",
+              "selected": true
+            }
+          ],
+          "value": "BookOrError",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "isPublic": {
+          "metadata": {
+            "label": "public",
+            "description": "Make visible across the project"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "description": {
+          "metadata": {
+            "label": "Type description",
+            "description": "Detailed description about the type"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isArray": {
+          "metadata": {
+            "label": "Is array type",
+            "description": "Is this type an array or list value"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "arraySize": {
+          "metadata": {
+            "label": "Size of the array",
+            "description": "Array dimensions"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        }
+      },
+      "members": [
+        {
+          "kind": "TYPE",
+          "refs": [
+            "Book"
+          ],
+          "type": "Book",
+          "typeName": "Book",
+          "name": "Book",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "selected": false
+        },
+        {
+          "kind": "TYPE",
+          "refs": [
+            "error"
+          ],
+          "type": "error",
+          "typeName": "error",
+          "name": "error",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "selected": false
+        }
+      ],
+      "annotationAttachments": [],
+      "allowAdditionalFields": false
+    },
+    {
+      "name": "ballerina/lang.value:Cloneable",
+      "editable": false,
+      "metadata": {
+        "label": "ballerina/lang.value:Cloneable",
+        "description": "The type of value to which `clone` and `cloneReadOnly` can be applied."
+      },
+      "codedata": {
+        "node": "UNION",
+        "lineRange": {
+          "fileName": "value.bal",
+          "startLine": {
+            "line": 19,
+            "offset": 0
+          },
+          "endLine": {
+            "line": 19,
+            "offset": 84
+          }
+        }
+      },
+      "properties": {
+        "name": {
+          "metadata": {
+            "label": "Type name",
+            "description": "Unique name to identify the type"
+          },
+          "types": [
+            {
+              "fieldType": "IDENTIFIER",
+              "selected": true
+            }
+          ],
+          "value": "ballerina/lang.value:Cloneable",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "isPublic": {
+          "metadata": {
+            "label": "public",
+            "description": "Make visible across the project"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "true",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "description": {
+          "metadata": {
+            "label": "Type description",
+            "description": "Detailed description about the type"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "The type of value to which `clone` and `cloneReadOnly` can be applied.",
+          "optional": false,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isArray": {
+          "metadata": {
+            "label": "Is array type",
+            "description": "Is this type an array or list value"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "arraySize": {
+          "metadata": {
+            "label": "Size of the array",
+            "description": "Array dimensions"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        }
+      },
+      "members": [
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": "readonly",
+          "typeName": "readonly",
+          "name": "readonly",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "selected": false
+        },
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": "xml<xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text>",
+          "typeName": "xml<xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text>",
+          "name": "xml<xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text>",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "selected": false
+        },
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": {
+            "editable": false,
+            "codedata": {
+              "node": "ARRAY"
+            },
+            "properties": {
+              "isArray": {
+                "metadata": {
+                  "label": "Is array type",
+                  "description": "Is this type an array or list value"
+                },
+                "types": [
+                  {
+                    "fieldType": "FLAG",
+                    "selected": true
+                  }
+                ],
+                "value": "true",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              },
+              "arraySize": {
+                "metadata": {
+                  "label": "Size of the array",
+                  "description": "Array dimensions"
+                },
+                "types": [
+                  {
+                    "fieldType": "TEXT",
+                    "selected": true
+                  }
+                ],
+                "value": "",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              }
+            },
+            "members": [
+              {
+                "kind": "TYPE",
+                "refs": [
+                  "ballerina/lang.value:Cloneable"
+                ],
+                "type": "value:Cloneable",
+                "typeName": "value:Cloneable",
+                "name": "value:Cloneable",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "imports": {
+                  "value": "ballerina/lang.value:0.0.0"
+                },
+                "selected": false
+              }
+            ],
+            "allowAdditionalFields": false
+          },
+          "typeName": "value:Cloneable[]",
+          "name": "value:Cloneable[]",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "imports": {
+            "value": "ballerina/lang.value:0.0.0"
+          },
+          "selected": false
+        },
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": {
+            "editable": false,
+            "codedata": {
+              "node": "MAP"
+            },
+            "properties": {
+              "isArray": {
+                "metadata": {
+                  "label": "Is array type",
+                  "description": "Is this type an array or list value"
+                },
+                "types": [
+                  {
+                    "fieldType": "FLAG",
+                    "selected": true
+                  }
+                ],
+                "value": "false",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              },
+              "arraySize": {
+                "metadata": {
+                  "label": "Size of the array",
+                  "description": "Array dimensions"
+                },
+                "types": [
+                  {
+                    "fieldType": "TEXT",
+                    "selected": true
+                  }
+                ],
+                "value": "",
+                "optional": false,
+                "editable": false,
+                "advanced": false,
+                "hidden": false
+              }
+            },
+            "members": [
+              {
+                "kind": "TYPE",
+                "refs": [
+                  "ballerina/lang.value:Cloneable"
+                ],
+                "type": "value:Cloneable",
+                "typeName": "value:Cloneable",
+                "name": "value:Cloneable",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "imports": {
+                  "value": "ballerina/lang.value:0.0.0"
+                },
+                "selected": false
+              }
+            ],
+            "allowAdditionalFields": false
+          },
+          "typeName": "map<value:Cloneable>",
+          "name": "map<value:Cloneable>",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "imports": {
+            "value": "ballerina/lang.value:0.0.0"
+          },
+          "selected": false
+        },
+        {
+          "kind": "TYPE",
+          "refs": [],
+          "type": {
+            "editable": false,
+            "codedata": {
+              "node": "TABLE"
+            },
+            "properties": {
+              "isArray": {
+                "metadata": {
+                  "label": "Is array type",
+                  "description": "Is this type an array or list value"
+                },
+                "types": [
+                  {
+                    "fieldType": "FLAG",
+                    "selected": true
+                  }
+                ],
+                "value": "false",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              },
+              "arraySize": {
+                "metadata": {
+                  "label": "Size of the array",
+                  "description": "Array dimensions"
+                },
+                "types": [
+                  {
+                    "fieldType": "TEXT",
+                    "selected": true
+                  }
+                ],
+                "value": "",
+                "optional": false,
+                "editable": false,
+                "advanced": false,
+                "hidden": false
+              }
+            },
+            "members": [
+              {
+                "kind": "TYPE",
+                "refs": [],
+                "type": {
+                  "editable": false,
+                  "codedata": {
+                    "node": "MAP"
+                  },
+                  "properties": {
+                    "isArray": {
+                      "metadata": {
+                        "label": "Is array type",
+                        "description": "Is this type an array or list value"
+                      },
+                      "types": [
+                        {
+                          "fieldType": "FLAG",
+                          "selected": true
+                        }
+                      ],
+                      "value": "false",
+                      "optional": true,
+                      "editable": true,
+                      "advanced": true,
+                      "hidden": false
+                    },
+                    "arraySize": {
+                      "metadata": {
+                        "label": "Size of the array",
+                        "description": "Array dimensions"
+                      },
+                      "types": [
+                        {
+                          "fieldType": "TEXT",
+                          "selected": true
+                        }
+                      ],
+                      "value": "",
+                      "optional": false,
+                      "editable": false,
+                      "advanced": false,
+                      "hidden": false
+                    }
+                  },
+                  "members": [
+                    {
+                      "kind": "TYPE",
+                      "refs": [
+                        "ballerina/lang.value:Cloneable"
+                      ],
+                      "type": "value:Cloneable",
+                      "typeName": "value:Cloneable",
+                      "name": "value:Cloneable",
+                      "optional": false,
+                      "readonly": false,
+                      "isGraphqlId": false,
+                      "imports": {
+                        "value": "ballerina/lang.value:0.0.0"
+                      },
+                      "selected": false
+                    }
+                  ],
+                  "allowAdditionalFields": false
+                },
+                "typeName": "map<value:Cloneable>",
+                "name": "rowType",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "selected": false
+              }
+            ],
+            "allowAdditionalFields": false
+          },
+          "typeName": "table<map<value:Cloneable>>",
+          "name": "table<map<value:Cloneable>>",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "imports": {
+            "value": "ballerina/lang.value:0.0.0"
+          },
+          "selected": false
+        }
+      ],
+      "annotationAttachments": [],
+      "allowAdditionalFields": false
+    },
+    {
+      "name": "Book",
+      "editable": true,
+      "metadata": {
+        "label": "Book",
+        "description": ""
+      },
+      "codedata": {
+        "node": "RECORD",
+        "lineRange": {
+          "fileName": "error_service.bal",
+          "startLine": {
+            "line": 2,
+            "offset": 5
+          },
+          "endLine": {
+            "line": 2,
+            "offset": 9
+          }
+        }
+      },
+      "properties": {
+        "name": {
+          "metadata": {
+            "label": "Type name",
+            "description": "Unique name to identify the type"
+          },
+          "types": [
+            {
+              "fieldType": "IDENTIFIER",
+              "selected": true
+            }
+          ],
+          "value": "Book",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "isPublic": {
+          "metadata": {
+            "label": "public",
+            "description": "Make visible across the project"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "description": {
+          "metadata": {
+            "label": "Type description",
+            "description": "Detailed description about the type"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isArray": {
+          "metadata": {
+            "label": "Is array type",
+            "description": "Is this type an array or list value"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "arraySize": {
+          "metadata": {
+            "label": "Size of the array",
+            "description": "Array dimensions"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        }
+      },
+      "members": [
+        {
+          "kind": "FIELD",
+          "refs": [],
+          "type": "string",
+          "typeName": "string",
+          "name": "title",
+          "optional": false,
+          "readonly": false,
+          "isGraphqlId": false,
+          "docs": "",
+          "annotationAttachments": [],
+          "selected": false,
+          "graphqlType": "String!"
+        }
+      ],
+      "includes": [],
+      "annotationAttachments": [],
+      "allowAdditionalFields": false
+    },
+    {
+      "name": "Shelf",
+      "editable": true,
+      "metadata": {
+        "label": "Shelf",
+        "description": ""
+      },
+      "codedata": {
+        "node": "CLASS",
+        "lineRange": {
+          "fileName": "error_service.bal",
+          "startLine": {
+            "line": 10,
+            "offset": 14
+          },
+          "endLine": {
+            "line": 10,
+            "offset": 19
+          }
+        }
+      },
+      "properties": {
+        "name": {
+          "metadata": {
+            "label": "Type name",
+            "description": "Unique name to identify the type"
+          },
+          "types": [
+            {
+              "fieldType": "IDENTIFIER",
+              "selected": true
+            }
+          ],
+          "value": "Shelf",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "qualifiers": {
+          "metadata": {
+            "label": "Type Qualifiers",
+            "description": "Qualifiers of the type"
+          },
+          "types": [
+            {
+              "fieldType": "MULTIPLE_SELECT",
+              "selected": true
+            }
+          ],
+          "value": [
+            "isolated",
+            "service"
+          ],
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "isArray": {
+          "metadata": {
+            "label": "Is array type",
+            "description": "Is this type an array or list value"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": true,
+          "hidden": false
+        },
+        "arraySize": {
+          "metadata": {
+            "label": "Size of the array",
+            "description": "Array dimensions"
+          },
+          "types": [
+            {
+              "fieldType": "TEXT",
+              "selected": true
+            }
+          ],
+          "value": "",
+          "optional": false,
+          "editable": false,
+          "advanced": false,
+          "hidden": false
+        },
+        "isPublic": {
+          "metadata": {
+            "label": "public",
+            "description": "Make visible across the project"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isDistinct": {
+          "metadata": {
+            "label": "distinct",
+            "description": "Is this distinct"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isIsolated": {
+          "metadata": {
+            "label": "isolated",
+            "description": "Is this isolated"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "true",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "isReadOnly": {
+          "metadata": {
+            "label": "readonly",
+            "description": "Is this readonly"
+          },
+          "types": [
+            {
+              "fieldType": "FLAG",
+              "selected": true
+            }
+          ],
+          "value": "false",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        },
+        "networkQualifier": {
+          "metadata": {
+            "label": "Network Qualifier",
+            "description": "Network qualifier"
+          },
+          "types": [
+            {
+              "fieldType": "SINGLE_SELECT",
+              "options": [
+                {
+                  "label": "service",
+                  "value": "service"
+                },
+                {
+                  "label": "client",
+                  "value": "client"
+                }
+              ],
+              "selected": true
+            }
+          ],
+          "value": "service",
+          "optional": true,
+          "editable": true,
+          "advanced": false,
+          "hidden": false
+        }
+      },
+      "members": [],
+      "includes": [],
+      "functions": [
+        {
+          "accessor": "get",
+          "qualifiers": [
+            "ISOLATED",
+            "RESOURCE"
+          ],
+          "parameters": [],
+          "kind": "RESOURCE",
+          "name": "book",
+          "description": "",
+          "returnType": {
+            "editable": false,
+            "codedata": {
+              "node": "UNION"
+            },
+            "properties": {
+              "isArray": {
+                "metadata": {
+                  "label": "Is array type",
+                  "description": "Is this type an array or list value"
+                },
+                "types": [
+                  {
+                    "fieldType": "FLAG",
+                    "selected": true
+                  }
+                ],
+                "value": "false",
+                "optional": true,
+                "editable": true,
+                "advanced": true,
+                "hidden": false
+              },
+              "arraySize": {
+                "metadata": {
+                  "label": "Size of the array",
+                  "description": "Array dimensions"
+                },
+                "types": [
+                  {
+                    "fieldType": "TEXT",
+                    "selected": true
+                  }
+                ],
+                "value": "",
+                "optional": false,
+                "editable": false,
+                "advanced": false,
+                "hidden": false
+              }
+            },
+            "members": [
+              {
+                "kind": "TYPE",
+                "refs": [
+                  "Book"
+                ],
+                "type": "Book",
+                "typeName": "Book",
+                "name": "Book",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "selected": false
+              },
+              {
+                "kind": "TYPE",
+                "refs": [
+                  "error"
+                ],
+                "type": "error",
+                "typeName": "error",
+                "name": "error",
+                "optional": false,
+                "readonly": false,
+                "isGraphqlId": false,
+                "selected": false
+              }
+            ],
+            "allowAdditionalFields": false
+          },
+          "returnTypeName": "Book|error",
+          "isGraphqlId": false,
+          "refs": [],
+          "properties": {
+            "isPrivate": {
+              "metadata": {
+                "label": "private",
+                "description": "Is this private"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            },
+            "isPublic": {
+              "metadata": {
+                "label": "public",
+                "description": "Make visible across the project"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            },
+            "isIsolated": {
+              "metadata": {
+                "label": "isolated",
+                "description": "Is this isolated"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "true",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "graphqlType": "Book!",
+          "graphqlReturnsError": true
+        },
+        {
+          "accessor": "get",
+          "qualifiers": [
+            "ISOLATED",
+            "RESOURCE"
+          ],
+          "parameters": [],
+          "kind": "RESOURCE",
+          "name": "label",
+          "description": "",
+          "returnType": "string",
+          "returnTypeName": "string",
+          "isGraphqlId": false,
+          "refs": [],
+          "properties": {
+            "isPrivate": {
+              "metadata": {
+                "label": "private",
+                "description": "Is this private"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            },
+            "isPublic": {
+              "metadata": {
+                "label": "public",
+                "description": "Make visible across the project"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "false",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            },
+            "isIsolated": {
+              "metadata": {
+                "label": "isolated",
+                "description": "Is this isolated"
+              },
+              "types": [
+                {
+                  "fieldType": "FLAG",
+                  "selected": true
+                }
+              ],
+              "value": "true",
+              "optional": true,
+              "editable": true,
+              "advanced": false,
+              "hidden": false
+            }
+          },
+          "graphqlType": "String!"
+        }
+      ],
+      "allowAdditionalFields": false
+    }
+  ]
+}
