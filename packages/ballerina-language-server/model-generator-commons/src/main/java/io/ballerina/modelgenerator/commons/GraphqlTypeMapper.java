@@ -290,11 +290,17 @@ public final class GraphqlTypeMapper {
     /**
      * The union members a value can be: nil makes the type nullable and an error goes to the response's
      * {@code errors}, so neither is a schema type. The members are taken as written, since memberTypeDescriptors()
-     * would flatten a referenced union into its members.
+     * would flatten a referenced union into its members. An anonymous union written as a member is opened up, so the
+     * nil and error inside it are dropped too: {@code Book|error?} is {@code Book|(error|())}, whose only value
+     * member is {@code Book}.
      */
     private static List<TypeSymbol> valueMembers(UnionTypeSymbol union) {
         List<TypeSymbol> members = new ArrayList<>();
         for (TypeSymbol member : union.userSpecifiedMemberTypes()) {
+            if (member instanceof UnionTypeSymbol anonymousUnion) {
+                members.addAll(valueMembers(anonymousUnion));
+                continue;
+            }
             TypeDescKind kind = CommonUtils.getRawType(member).typeKind();
             if (kind != TypeDescKind.NIL && kind != TypeDescKind.ERROR) {
                 members.add(member);

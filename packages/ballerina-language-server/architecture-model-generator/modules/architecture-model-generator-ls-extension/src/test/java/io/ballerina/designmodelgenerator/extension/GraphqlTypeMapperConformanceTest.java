@@ -58,8 +58,9 @@ public class GraphqlTypeMapperConformanceTest {
     private static final Path SOURCE_DIR = Path.of("src/test/resources/get_design_model/source");
 
     // GraphQL services covering the mapper's rules: scalars, @graphql:ID, nullability, lists, tables, aliases,
-    // readonly intersections, defaults, injected parameters, deprecation and subscription streams.
-    private static final List<String> PROJECTS = List.of("project_19");
+    // readonly intersections, defaults, injected parameters, deprecation and subscription streams; and resolver errors
+    // in each shape a return type can hold them (`T|error`, `T|error?`, `T?|error`, a custom or aliased error).
+    private static final List<String> PROJECTS = List.of("project_19", "project_22");
 
     // Fields where the diagram knowingly differs from the plugin, with the reason. A difference that is not listed
     // here fails the test, so a new one cannot slip in unnoticed.
@@ -71,7 +72,9 @@ public class GraphqlTypeMapperConformanceTest {
             "Query.email", "The plugin leaves an alias of a scalar (`type Email string`) unnamed; the diagram shows "
                     + "the scalar it names, `String!`.",
             "Query.profileOrBadge", "The plugin names an anonymous union after its members (`MaybeProfile_Badge`); "
-                    + "the diagram shows the members, `(Profile|Badge)`. Both make it nullable."
+                    + "the diagram shows the members, `(Profile|Badge)`. Both make it nullable.",
+            "Query.bookOrAuthor", "The plugin names an anonymous union after its members (`Book_Author`); the "
+                    + "diagram shows the members, `(Book|Author)`. Both make it nullable, from the nil in `error?`."
     );
 
     @Test
